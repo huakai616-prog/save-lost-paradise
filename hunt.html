@@ -1,0 +1,1332 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>拯救失乐园 · 实景音乐寻宝</title>
+<style>
+/* ============ 设计 token ============ */
+:root{
+  --bg:#F5F0E4;            /* 乐谱纸暖底 */
+  --paper:#FDFBF4;
+  --ink:#2B2620;
+  --ink-soft:#6E6557;
+  --line:#D8CFBC;          /* 五线谱线 */
+  --staff:#B9AC93;
+  --accent:#B45309;        /* 琥珀主强调 */
+  --accent-ink:#FFF6E8;
+  --c-do:#E2574C; --c-re:#E8893C; --c-mi:#DFB63C;
+  --c-fa:#6FAE4E; --c-sol:#3FA9A0; --c-la:#4E7FC4; --c-ti:#8A6BBE;
+  --c-rhythm:#3D6B99; --c-play:#C98A2D;
+  --r-lg:18px; --r-md:12px; --r-sm:8px;
+  --shadow:0 2px 10px rgba(43,38,32,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  background:var(--bg);color:var(--ink);
+  display:flex;flex-direction:column;min-height:100dvh;
+}
+button{font-family:inherit;border:none;background:none;cursor:pointer;color:inherit}
+input,select{font-family:inherit;font-size:15px;border:1.5px solid var(--line);border-radius:var(--r-sm);padding:9px 12px;background:var(--paper);color:var(--ink)}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+.hidden{display:none !important}
+
+/* ============ 顶栏 ============ */
+header{
+  position:sticky;top:0;z-index:50;background:var(--bg);
+  padding:10px 14px calc(10px + env(safe-area-inset-top));
+  border-bottom:1.5px solid var(--line);
+  display:flex;align-items:center;gap:10px;
+}
+.logo{display:flex;align-items:center;gap:8px;font-weight:800;font-size:17px;letter-spacing:.5px}
+.logo svg{flex:none}
+.mode-select{
+  margin-left:auto;background:var(--paper);border:1.5px solid var(--line);border-radius:999px;
+  padding:7px 14px;font-size:13.5px;font-weight:700;color:var(--ink);appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236E6557' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;padding-right:30px;
+}
+.icon-btn{
+  width:38px;height:38px;border-radius:10px;display:grid;place-items:center;
+  border:1.5px solid var(--line);background:var(--paper);flex:none;
+}
+.icon-btn:active{transform:scale(.94)}
+
+/* ============ 主区 ============ */
+main{flex:1;width:100%;max-width:760px;margin:0 auto;padding:14px 14px calc(20px + env(safe-area-inset-bottom))}
+.view-title{font-size:15px;font-weight:700;margin:4px 2px 10px;color:var(--ink-soft)}
+
+/* ============ 房间列表 ============ */
+.room-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.room-card{
+  background:var(--paper);border:1.5px solid var(--line);border-radius:var(--r-lg);
+  overflow:hidden;box-shadow:var(--shadow);text-align:left;display:flex;flex-direction:column;
+  position:relative;
+}
+.room-del{
+  position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:999px;
+  background:rgba(43,38,32,.6);color:#fff;display:grid;place-items:center;
+  opacity:.9;transition:transform .1s ease;z-index:2;
+}
+.room-del:active{transform:scale(.88);background:var(--c-do)}
+.room-card .thumb{width:100%;aspect-ratio:4/3;background:#EDE6D6;position:relative;overflow:hidden}
+.room-card .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.room-card .thumb .nocard{position:absolute;inset:0;display:grid;place-items:center;color:var(--ink-soft);font-size:12px;gap:6px}
+.room-card .meta{padding:10px 12px;display:flex;flex-direction:column;gap:4px}
+.room-card .name{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.room-card .sub{font-size:11.5px;color:var(--ink-soft)}
+.new-room-card{
+  border:1.5px dashed var(--staff);background:transparent;color:var(--ink-soft);
+  min-height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+  font-size:13px;font-weight:600;border-radius:var(--r-lg);
+}
+.new-room-card svg{opacity:.6}
+
+/* ============ 照片舞台 ============ */
+.stage-wrap{position:relative;background:#000;border-radius:var(--r-lg);overflow:hidden;border:1.5px solid var(--line);touch-action:manipulation}
+.stage-wrap img{width:100%;height:auto;display:block;pointer-events:none}
+.stage-empty{
+  aspect-ratio:4/3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+  color:var(--ink-soft);background:linear-gradient(180deg,#F3EDDE,#E9E0CC);text-align:center;padding:20px;
+}
+.stage-empty .hint{font-size:13px;line-height:1.7}
+.camera-btn,.file-btn{display:inline-flex;align-items:center;gap:6px;background:var(--accent);color:var(--accent-ink);padding:10px 16px;border-radius:999px;font-size:14px;font-weight:600;box-shadow:var(--shadow)}
+.file-btn{background:var(--ink);color:var(--paper)}
+.photo-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+
+/* 卡片标记 */
+.marker{
+  position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:1px;
+  width:52px;cursor:pointer;filter:drop-shadow(0 2px 3px rgba(0,0,0,.25));
+  transition:transform .12s ease;
+}
+.marker:active{transform:translate(-50%,-50%) scale(.9)}
+.marker .chip{
+  width:46px;height:46px;border-radius:10px;background:var(--paper);
+  display:grid;place-items:center;border:2.5px solid;position:relative;
+}
+.marker .chip svg{width:26px;height:26px}
+.marker .count{
+  min-width:20px;height:20px;border-radius:999px;background:var(--ink);color:#fff;
+  font-size:11px;font-weight:700;display:grid;place-items:center;padding:0 5px;
+}
+.marker.claimed .chip{opacity:.35}
+.marker.claimed .count{background:var(--staff)}
+.marker.done{filter:grayscale(1) opacity(.4)}
+.marker.selected .chip{outline:3px solid var(--accent);outline-offset:2px}
+
+/* 卡片图标配色 */
+.marker[data-t="note_fa"] .chip{border-color:var(--c-fa);color:var(--c-fa)}
+.marker[data-t="rhythm_8"] .chip{border-color:var(--c-rhythm);color:var(--c-rhythm)}
+.marker[data-t="play"] .chip{border-color:var(--c-play);color:var(--c-play)}
+
+/* 编辑器工具栏 */
+.editor-toolbar{position:sticky;bottom:0;background:var(--paper);border:1.5px solid var(--line);border-radius:var(--r-lg) var(--r-lg) 0 0;padding:10px 12px calc(10px + env(safe-area-inset-bottom));margin-top:10px;box-shadow:0 -4px 14px rgba(43,38,32,.06)}
+.pick-row{display:flex;gap:8px;align-items:center}
+.pick-label{font-size:12px;font-weight:700;color:var(--ink-soft);margin-right:2px}
+.pick-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 4px;
+  border-radius:var(--r-md);border:1.5px solid var(--line);background:#FFF;font-size:11.5px;font-weight:600;color:var(--ink);
+}
+.pick-btn svg{width:24px;height:24px}
+.pick-btn.on{border-color:var(--accent);background:var(--accent);color:var(--accent-ink)}
+.pick-btn[data-t="note_fa"] svg{color:var(--c-fa)}.pick-btn[data-t="note_fa"].on svg{color:#fff}
+.pick-btn[data-t="rhythm_8"] svg{color:var(--c-rhythm)}.pick-btn[data-t="rhythm_8"].on svg{color:#fff}
+.pick-btn[data-t="play"] svg{color:var(--c-play)}.pick-btn[data-t="play"].on svg{color:#fff}
+.placed-row{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;min-height:26px}
+.placed-chip{
+  display:inline-flex;align-items:center;gap:4px;background:#F1EADA;border:1.2px solid var(--line);
+  border-radius:999px;padding:3px 10px;font-size:12px;font-weight:600;cursor:pointer;
+}
+.placed-chip .x{color:var(--c-do);font-weight:800;margin-left:2px}
+.toolbar-row{display:flex;gap:8px;margin-top:10px}
+.btn{
+  flex:1;padding:11px;border-radius:var(--r-md);font-size:14px;font-weight:700;text-align:center;
+  background:var(--accent);color:var(--accent-ink);box-shadow:var(--shadow);
+}
+.btn.ghost{background:var(--paper);border:1.5px solid var(--line);color:var(--ink);box-shadow:none}
+.btn.danger{background:var(--c-do);color:#fff}
+.btn:disabled{opacity:.45;box-shadow:none;cursor:not-allowed}
+.editor-head{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.editor-head input{flex:1}
+.top-note{font-size:12.5px;color:var(--ink-soft);background:#F1EADA;border:1.2px solid var(--line);border-radius:var(--r-sm);padding:8px 10px;margin-bottom:10px;line-height:1.6}
+
+/* ============ 幻乐师端 ============ */
+.player-head{display:flex;gap:8px;margin-bottom:10px;align-items:center;flex-wrap:wrap}
+.player-head input{flex:1;min-width:120px}
+.room-now{
+  font-size:12px;font-weight:700;color:var(--accent);background:#FFF3E2;
+  border:1.2px solid rgba(180,83,9,.35);border-radius:999px;padding:6px 12px;
+  max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+/* 房间列表（幻乐师上一层） */
+.prl-title{font-size:15px;font-weight:800;color:var(--ink);margin:4px 0 10px}
+.prl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.prl-card{
+  display:flex;flex-direction:column;gap:6px;text-align:left;
+  background:#fff;border:1.5px solid var(--line);border-radius:var(--r-md);
+  padding:12px 14px;cursor:pointer;
+}
+.prl-card.cur{border-color:var(--accent);background:#FFF7EA;box-shadow:0 0 0 2px rgba(180,83,9,.12)}
+.prl-card .prl-name{font-size:14px;font-weight:800;color:var(--ink)}
+.prl-card .prl-count{font-size:12px;color:var(--ink-soft)}
+.prl-tip{font-size:12px;color:var(--ink-soft);margin-top:12px;line-height:1.6}
+.prl-empty{font-size:13px;color:var(--ink-soft);background:#F1EADA;border:1.2px solid var(--line);border-radius:var(--r-sm);padding:14px;text-align:center}
+.find-hint{font-size:13px;color:var(--ink-soft);text-align:center;margin:10px 0 4px}
+.player-nav{display:flex;gap:8px;margin:12px 0 2px;align-items:stretch}
+.player-nav .mini-btn{display:flex;align-items:center;justify-content:center;white-space:nowrap}
+.live-tip{font-size:12px;color:var(--ink-soft);background:#F1EADA;border:1.2px solid var(--line);border-radius:var(--r-sm);padding:8px 10px;margin-top:8px;line-height:1.6}
+
+/* 背包栏：每张卡片独立展示 */
+.backpack-bar{
+  position:sticky;bottom:0;background:var(--paper);border-top:1.5px solid var(--line);
+  padding:10px 14px calc(10px + env(safe-area-inset-bottom));
+  box-shadow:0 -4px 14px rgba(43,38,32,.06);
+}
+.bp-title{font-size:13px;font-weight:800;color:var(--ink-soft);display:flex;align-items:center;gap:8px}
+.bp-count{font-size:11px;color:var(--accent);font-weight:700}
+.bp-cards{display:flex;flex-wrap:wrap;gap:8px;padding:8px 0 6px;min-height:60px}
+.bp-card{
+  display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 7px 5px;
+  border:2px solid var(--line);border-radius:10px;background:#F4EFE2;
+  min-width:58px;cursor:pointer;user-select:none;transition:transform .1s ease;
+}
+.bp-card svg{width:24px;height:24px}
+.bp-card .nm{font-size:10px;color:var(--ink-soft);max-width:56px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bp-card.sel{border-color:var(--accent);background:#FFF6E8;box-shadow:0 0 0 2px rgba(180,83,9,.16);transform:translateY(-2px)}
+.bp-card.sel .nm{color:var(--accent);font-weight:700}
+.bp-card:active{transform:scale(.93)}
+.bp-card[data-t="note_fa"] svg{color:var(--c-fa)}.bp-card[data-t="rhythm_8"] svg{color:var(--c-rhythm)}.bp-card[data-t="play"] svg{color:var(--c-play)}
+.bp-actions{display:flex;gap:8px}
+.bp-actions .mini-btn{flex:1}
+.bp-tip{font-size:11px;color:var(--ink-soft);margin-top:6px;line-height:1.5}
+.mini-btn{border:1.5px solid var(--line);background:#fff;border-radius:var(--r-sm);padding:7px 10px;font-size:12px;font-weight:700;color:var(--ink)}
+.mini-btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.mini-btn.danger{background:#FDEBE9;border-color:#E5B4AC;color:#B3412E}
+.mini-btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* 静音标记（仅主持人端可见） */
+.silent-badge{
+  position:absolute;right:-7px;top:-7px;background:#4A4038;color:#fff;
+  font-size:9px;line-height:1;font-weight:800;border-radius:999px;padding:3px 5px;
+  border:1.5px solid var(--paper);letter-spacing:.5px;
+}
+
+/* 幻乐师提交面板（主持人端） */
+.submit-panel{margin-top:12px;background:var(--paper);border:1.5px solid var(--line);border-radius:var(--r-md);padding:10px 12px}
+.submit-title{font-size:12.5px;font-weight:800;color:var(--ink-soft);margin-bottom:8px;letter-spacing:.5px}
+.submit-item{display:flex;align-items:center;gap:8px;font-size:13px;padding:7px 0;border-bottom:1px dashed var(--line);flex-wrap:wrap}
+.submit-item:last-child{border-bottom:none}
+.submit-item .who{font-weight:700;color:var(--ink)}
+.submit-cards{display:flex;gap:8px}
+.sub-card{
+  display:inline-flex;align-items:center;gap:4px;border:1.8px solid;border-radius:8px;
+  padding:3px 9px;font-size:12px;font-weight:600;position:relative;background:#F4EFE2;
+}
+.sub-card svg{width:16px;height:16px}
+.sub-card .silent-badge{right:-6px;top:-6px;font-size:8px;padding:2px 4px}
+.submit-clear{font-size:11px;color:var(--ink-soft);text-decoration:underline;margin-top:6px;cursor:pointer}
+
+/* 飞入动画 */
+#flyLayer{position:fixed;inset:0;pointer-events:none;z-index:200}
+.fly-card{
+  position:fixed;width:52px;height:52px;border-radius:12px;background:var(--paper);
+  border:3px solid;display:grid;place-items:center;z-index:200;box-shadow:0 6px 18px rgba(0,0,0,.3);
+  transition:transform .55s cubic-bezier(.3,.9,.4,1),opacity .55s;
+}
+.fly-card svg{width:30px;height:30px}
+
+/* toast */
+#toast{
+  position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(10px);
+  background:rgba(43,38,32,.92);color:#fff;padding:10px 18px;border-radius:999px;font-size:13.5px;font-weight:600;
+  opacity:0;transition:all .25s ease;z-index:300;pointer-events:none;max-width:86vw;text-align:center;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* iOS 提示 */
+.ios-mute-tip{position:fixed;right:10px;bottom:calc(150px + env(safe-area-inset-bottom));background:rgba(43,38,32,.85);color:#fff;font-size:11px;border-radius:8px;padding:6px 9px;display:flex;align-items:center;gap:5px;z-index:150;line-height:1.35;max-width:180px}
+
+/* 弹窗 */
+.modal-mask{position:fixed;inset:0;background:rgba(43,38,32,.45);z-index:400;display:grid;place-items:center;padding:24px}
+.modal{
+  background:var(--paper);border-radius:var(--r-lg);width:100%;max-width:380px;padding:18px;
+  box-shadow:0 10px 40px rgba(0,0,0,.25);max-height:82dvh;overflow:auto;
+}
+.modal h3{font-size:16px;margin-bottom:12px}
+.modal .row{display:flex;gap:8px;margin-top:12px}
+.modal .btn{flex:1}
+
+/* ============ 实景模式（摄像头） ============ */
+.mode-tabs{display:flex;gap:6px;margin-bottom:10px}
+.mode-tab{
+  flex:1;padding:9px;border-radius:var(--r-md);border:1.5px solid var(--line);
+  background:var(--paper);font-size:13.5px;font-weight:700;color:var(--ink-soft);
+  display:flex;align-items:center;justify-content:center;gap:5px;
+}
+.mode-tab.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.live-wrap{position:relative;border-radius:var(--r-lg);overflow:hidden;background:#000;border:1.5px solid var(--line);touch-action:manipulation}
+.live-wrap video{width:100%;height:auto;display:block}
+#playerLiveStage{position:relative}
+.cam-off{
+  aspect-ratio:3/4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  color:#E9E2D2;text-align:center;padding:20px;font-size:13.5px;line-height:1.7;
+  background:linear-gradient(180deg,#141210,#221E18);
+}
+.cam-off svg{opacity:.7}
+.live-actions{display:flex;gap:8px;margin-bottom:8px}
+.align-layer{position:absolute;left:0;top:0;width:100%;height:100%;transform-origin:top left;z-index:2;overflow:hidden}
+.align-layer img{width:100%;height:100%;object-fit:contain;display:block}
+.align-layer .marker{z-index:3}
+.live-ctrl{
+  position:sticky;bottom:0;background:var(--paper);border:1.5px solid var(--line);
+  border-radius:var(--r-lg) var(--r-lg) 0 0;padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+  margin-top:10px;box-shadow:0 -4px 14px rgba(43,38,32,.06);display:flex;gap:8px;align-items:center;flex-wrap:wrap;
+}
+.live-ctrl .mini-btn{flex:none}
+.live-ctrl .sp{flex:1}
+.live-tip{font-size:12.5px;color:var(--ink-soft);margin:8px 2px 0;line-height:1.6}
+
+/* 寻宝隐藏模式：找到/未找到反馈 */
+.found-mark{
+  position:absolute;transform:translate(-50%,-50%);min-width:30px;height:30px;border-radius:50%;
+  background:rgba(43,38,32,.55);color:#fff;font-size:13px;font-weight:800;
+  display:grid;place-items:center;pointer-events:none;z-index:20;padding:0 6px;
+}
+.found-mark.done{background:rgba(43,38,32,.32)}
+.found-pop{
+  position:absolute;transform:translate(-50%,-50%) scale(.4);width:64px;height:64px;border-radius:14px;
+  background:var(--paper);border:3.5px solid;display:grid;place-items:center;pointer-events:none;
+  box-shadow:0 8px 24px rgba(0,0,0,.35);z-index:30;
+  animation:foundPop .5s cubic-bezier(.2,1.4,.4,1) forwards;
+}
+.found-pop svg{width:34px;height:34px}
+@keyframes foundPop{
+  0%{transform:translate(-50%,-50%) scale(.4);opacity:0}
+  60%{transform:translate(-50%,-50%) scale(1.12);opacity:1}
+  100%{transform:translate(-50%,-50%) scale(1);opacity:1}
+}
+.ripple{
+  position:absolute;transform:translate(-50%,-50%) scale(.4);width:46px;height:46px;border-radius:50%;
+  border:2.5px solid var(--staff);pointer-events:none;z-index:30;
+  animation:ripple .5s ease-out forwards;
+}
+@keyframes ripple{0%{transform:translate(-50%,-50%) scale(.4);opacity:.85}100%{transform:translate(-50%,-50%) scale(1.7);opacity:0}}
+
+/* 桌面适配 */
+@media(min-width:700px){
+  main{max-width:860px}
+  .room-grid{grid-template-columns:repeat(auto-fill,minmax(190px,1fr))}
+}
+@media(max-width:420px){
+  .marker{width:44px}
+  .marker .chip{width:40px;height:40px}
+  .marker .chip svg{width:22px;height:22px}
+}
+@media(prefers-reduced-motion:reduce){
+  *{transition:none !important;animation:none !important}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#B45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+    拯救失乐园
+  </div>
+  <select id="modeSelect" class="mode-select" aria-label="切换模式">
+    <option value="host">主持人</option>
+    <option value="player">幻乐师</option>
+  </select>
+  <button class="icon-btn" id="muteBtn" title="声音开关" aria-label="声音开关" role="switch" aria-checked="false">
+    <svg id="muteOnIco" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M22 9l-6 6M16 9l6 6"/></svg>
+    <svg id="muteOffIco" class="hidden" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9.5 9.5 0 0 1 0 13"/></svg>
+  </button>
+</header>
+
+<main>
+
+<!-- ============ 主持人视图 ============ -->
+<section id="hostView">
+  <div id="roomListPanel">
+    <div class="view-title">我的房间（放好卡片后，同一台设备切到幻乐师端直接寻宝）</div>
+    <div class="room-grid" id="roomGrid"></div>
+  </div>
+
+  <div id="editorPanel" class="hidden">
+    <div class="editor-head">
+      <button class="icon-btn" id="backToList" title="返回">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+      <input id="roomNameInput" placeholder="房间名称，如：音乐教室" maxlength="20">
+    </div>
+
+    <div class="mode-tabs" id="editorModeTabs">
+      <button class="mode-tab on" data-m="photo">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+        照片模式
+      </button>
+      <button class="mode-tab" data-m="live">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7 16 12l7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+        实景模式
+      </button>
+    </div>
+
+    <div id="stageEmpty" class="stage-empty">
+      <svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="#B9AC93" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      <div class="hint">先给真实房间拍一张照片，作为卡片摆放的地图<br>照片会保存在本地，幻乐师在同一张地图上寻宝</div>
+      <div class="photo-actions">
+        <button class="camera-btn" id="cameraBtn">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/></svg>
+          拍摄房间
+        </button>
+        <button class="file-btn" id="photoFileBtn">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          选择照片
+        </button>
+      </div>
+    </div>
+
+    <div id="stageWrap" class="stage-wrap hidden">
+      <img id="stageImg" alt="房间地图">
+      <div id="markerLayer"></div>
+    </div>
+
+    <!-- 实景舞台：后置摄像头实时取景放置 -->
+    <div id="liveWrap" class="live-wrap hidden">
+      <div id="liveCamOff" class="cam-off">
+        <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7 16 12l7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+        <div>打开后置摄像头后，<b>点击画面任意位置</b>即可放置当前选中的卡片<br>放好后点「定格保存」，房间地图就生成了</div>
+        <button class="camera-btn" id="openLiveBtn">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/></svg>
+          打开后置摄像头
+        </button>
+      </div>
+      <video id="liveVideo" playsinline muted autoplay class="hidden"></video>
+      <div id="liveMarkerLayer" class="hidden"></div>
+    </div>
+    <input type="file" id="photoInput" accept="image/*" capture="environment" class="hidden">
+
+    <div class="top-note" id="editHint">在照片空白处点击放置当前选中的卡片；点已放置的卡片可 +1 / −1 / 删除。</div>
+
+    <div class="editor-toolbar">
+      <div class="live-actions" id="hostLiveActions" style="display:none">
+        <button class="btn" id="freezeBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="12" r="4"/></svg>
+          定格保存房间
+        </button>
+        <button class="btn ghost" id="closeLiveBtn">关闭摄像头</button>
+      </div>
+      <div class="pick-row">
+        <span class="pick-label">放置</span>
+        <button class="pick-btn on" data-t="rhythm_8">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 18.5a2.5 2.5 0 1 1-2-2.45V6.2l13-2.5v9.55a2.5 2.5 0 1 1-2-2.45V8.1l-9 1.73v8.67z"/></svg>
+          八分音符
+        </button>
+        <button class="pick-btn" data-t="note_fa">
+          <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="17" r="3.2"/><path d="M11.2 17V5.4L21 3.4v8.6a3.2 3.2 0 1 1-2-2.95V7.1l-5.8 1.1V17z"/></svg>
+          音符 Fa
+        </button>
+        <button class="pick-btn" data-t="play">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v13.72a1 1 0 0 0 1.5.86l11-6.86a1 1 0 0 0 0-1.72l-11-6.86a1 1 0 0 0-1.5.86z"/></svg>
+          播放键
+        </button>
+      </div>
+      <div class="placed-row" id="placedRow"><span style="font-size:11.5px;color:var(--ink-soft)">已放置：</span></div>
+      <div class="toolbar-row">
+        <button class="btn ghost" id="clearMarkers">清空卡片</button>
+        <button class="btn" id="saveRoomBtn">保存房间</button>
+      </div>
+    </div>
+
+    <!-- 幻乐师提交面板（主持人验收，含静音标记） -->
+    <div class="submit-panel" id="submissionsPanel">
+      <div class="submit-title">幻乐师提交的卡片</div>
+      <div id="submissionsList"><span style="font-size:12px;color:var(--ink-soft)">还没有幻乐师提交，幻乐师在背包里选两张卡片提交后会显示在这里。</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 幻乐师视图 ============ -->
+<section id="playerView" class="hidden">
+  <div class="player-head">
+    <input id="playerNameInput" placeholder="幻乐师昵称" maxlength="12">
+    <span class="room-now" id="roomNowTag"></span>
+  </div>
+
+  <!-- 房间列表（上一层：选择房间） -->
+  <div id="playerRoomList">
+    <div class="prl-title">选择房间</div>
+    <div class="prl-grid" id="prlGrid"></div>
+    <div class="prl-tip">进任意房间寻宝，收获都收进同一个背包；返回上一层即可换房间。</div>
+  </div>
+
+  <!-- 寻宝界面 -->
+  <div id="playerHuntPanel" class="hidden">
+    <div id="playerStageEmpty" class="stage-empty hidden">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#B9AC93" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35M8 11h6M11 8v6"/></svg>
+      <div class="hint">这个房间还没有地图<br>先让主持人在「实景模式」放好卡片并定格保存，再回到幻乐师端寻宝</div>
+    </div>
+
+    <div id="playerStageWrap" class="stage-wrap hidden">
+      <img id="playerStageImg" alt="寻宝地图">
+      <div id="playerMarkerLayer"></div>
+    </div>
+    <div class="find-hint" id="findHint"></div>
+
+    <div class="player-nav">
+      <button class="mini-btn" id="backToRoomsBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        返回上一层
+      </button>
+      <button class="mini-btn primary" id="liveHuntBtn" style="flex:1;padding:12px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px"><path d="M23 7 16 12l7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+        实景寻宝（打开摄像头扫描）
+      </button>
+    </div>
+    <div class="live-tip">实景寻宝：打开后置摄像头，半透明房间地图会一直叠在画面上辅助对准，把手机转到与地图大致重合，然后点击你认为藏卡的位置，点中就能获得卡片。找完点「退出实景」返回。</div>
+
+    <!-- 幻乐师实景舞台 -->
+    <div id="playerLiveWrap" class="live-wrap hidden">
+      <div id="playerLiveCamOff" class="cam-off">
+        <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7 16 12l7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+        <div>打开后置摄像头，屏幕会叠一层半透明的房间地图<br>把手机转到与地图相同的角度，让画面<b>大致重合</b><br>卡片不会显示，重合后直接点击可能藏卡的位置寻找</div>
+        <button class="camera-btn" id="openPlayerLiveBtn">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/></svg>
+          打开后置摄像头
+        </button>
+      </div>
+      <div id="playerLiveStage" class="hidden">
+        <video id="playerLiveVideo" playsinline muted autoplay></video>
+        <div id="playerAlignLayer" class="align-layer">
+          <img id="playerAlignImg" alt="对准参考地图">
+          <div id="playerLiveMarkerLayer"></div>
+        </div>
+      </div>
+      <div class="live-ctrl">
+        <button class="mini-btn" id="alignTransBtn">透明度</button>
+        <button class="mini-btn" id="alignZoomOut">－</button>
+        <button class="mini-btn" id="alignZoomIn">＋</button>
+        <span class="sp"></span>
+        <button class="mini-btn" id="exitLiveBtn">退出实景</button>
+      </div>
+    </div>
+
+    <div class="backpack-bar">
+      <div class="bp-title">我的背包 <span id="bpCount" class="bp-count"></span></div>
+      <div class="bp-cards" id="bpSlots"></div>
+      <div class="bp-actions">
+        <button class="mini-btn primary" id="submitBtn">提交选中（0/2）</button>
+        <button class="mini-btn" id="resetClaimBtn">重置寻宝</button>
+        <button class="mini-btn danger" id="clearBpBtn">清空背包</button>
+      </div>
+      <div class="bp-tip">每张卡片都是一个独立的收获；点选两张卡片，交给主持人。</div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<div id="flyLayer"></div>
+<div id="toast"></div>
+<div class="ios-mute-tip hidden" id="iosMuteTip">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+  <span>iPhone 请关闭侧边静音键，否则听不到声音</span>
+</div>
+
+<!-- ============ 弹窗模板 ============ -->
+<div class="modal-mask hidden" id="modalMask">
+  <div class="modal" id="modalBox"></div>
+</div>
+
+<script>
+/* =========================================================
+   拯救失乐园 · 主持人实景放卡 / 幻乐师实景寻宝（同设备直玩）
+   数据：localStorage（同设备多房间/多位幻乐师，无导入导出）
+   ========================================================= */
+"use strict";
+const LS_ROOMS="mh_rooms_v1", LS_PLAYERS="mh_players_v1", LS_PREF="mh_pref_v1";
+const $=s=>document.querySelector(s);
+
+/* ---------- 卡片定义 ---------- */
+const CARD_TYPES={
+  note_fa:{t:"note_fa",name:"音符 Fa",kind:"note",color:"var(--c-fa)"},
+  rhythm_8:{t:"rhythm_8",name:"八分音符",kind:"rhythm",color:"var(--c-rhythm)"},
+  play:{t:"play",name:"播放键",kind:"function",color:"var(--c-play)"}
+};
+const CARD_ORDER=["rhythm_8","note_fa","play"];
+function cardIcon(t,size=26){
+  const s=`width:${size}px;height:${size}px`;
+  if(t==="note_fa")return `<svg style="${s}" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="17" r="3.2"/><path d="M11.2 17V5.4L21 3.4v8.6a3.2 3.2 0 1 1-2-2.95V7.1l-5.8 1.1V17z"/></svg>`;
+  if(t==="rhythm_8")return `<svg style="${s}" viewBox="0 0 24 24" fill="currentColor"><path d="M9 18.5a2.5 2.5 0 1 1-2-2.45V6.2l13-2.5v9.55a2.5 2.5 0 1 1-2-2.45V8.1l-9 1.73v8.67z"/></svg>`;
+  return `<svg style="${s}" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v13.72a1 1 0 0 0 1.5.86l11-6.86a1 1 0 0 0 0-1.72l-11-6.86a1 1 0 0 0-1.5.86z"/></svg>`;
+}
+
+/* ---------- 存储 ---------- */
+function load(k,d){try{const v=JSON.parse(localStorage.getItem(k));return v??d}catch(e){return d}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){toast("本地存储空间不足，可删除一些旧房间")}}
+function rooms(){return load(LS_ROOMS,[])}
+function saveRooms(r){save(LS_ROOMS,r)}
+function players(){return load(LS_PLAYERS,{})}  // key: roomId||playerName
+function savePlayers(p){save(LS_PLAYERS,p)}
+
+/* ---------- 音频 ---------- */
+let AC=null,muted=load(LS_PREF,{}).muted||false;
+const FREQ={note_fa:349.23,do:261.63,re:293.66,mi:329.63,fa:349.23,sol:392.00,la:440.00,ti:493.88};
+function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){return null}}if(AC&&AC.state==="suspended")AC.resume();return AC}
+function tone(freq,dur=0.28,type="sine",vol=0.32,when=0){
+  if(muted)return;const c=ac();if(!c)return;
+  const o=c.createOscillator(),g=c.createGain(),t=c.currentTime+when;
+  o.type=type;o.frequency.value=freq;
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(vol,t+0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+dur+0.05);
+}
+function playCardSound(t){
+  if(t==="note_fa")tone(FREQ.note_fa,0.4,"sine",0.35);
+  else if(t==="rhythm_8"){
+    tone(1200,0.05,"square",0.18,0);tone(1200,0.05,"square",0.18,0.24);
+  }else{
+    const seq=[261.63,293.66,329.63,349.23,392,440,493.88,523.25];
+    seq.forEach((f,i)=>tone(f,0.3,"sine",0.3,i*0.16));
+  }
+}
+function playFail(){tone(175,0.2,"sawtooth",0.14);tone(140,0.25,"sawtooth",0.12,0.1)}
+function setMute(m){
+  muted=m;const p=load(LS_PREF,{});p.muted=m;save(LS_PREF,p);
+  $("#muteOnIco").classList.toggle("hidden",!m);
+  $("#muteOffIco").classList.toggle("hidden",m);
+  $("#muteBtn").setAttribute("aria-checked",String(m));
+}
+$("#muteBtn").addEventListener("click",()=>setMute(!muted));
+setMute(muted);
+
+/* ---------- 工具 ---------- */
+let toastTimer=null;
+function toast(msg){const el=$("#toast");el.textContent=msg;el.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove("show"),1900)}
+function uid(){return Math.random().toString(36).slice(2,8)}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+if(isIOS)$("#iosMuteTip").classList.remove("hidden");
+
+/* ---------- 摄像头（实景模式） ---------- */
+let liveStream=null;
+async function openCamera(videoEl){
+  stopCamera();
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast("当前浏览器不支持摄像头，可改用照片模式");return null}
+  try{
+    liveStream=await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:{ideal:"environment"},width:{ideal:1280}},audio:false
+    });
+  }catch(e){
+    if(e.name==="NotAllowedError")toast("需要允许摄像头权限（在浏览器地址栏左侧开启）");
+    else if(e.name==="NotFoundError")toast("没有找到摄像头，可改用照片模式");
+    else toast("无法打开摄像头："+(e.message||e.name));
+    return null;
+  }
+  videoEl.srcObject=liveStream;
+  try{await videoEl.play()}catch(e){}
+  return liveStream;
+}
+function stopCamera(){if(liveStream){liveStream.getTracks().forEach(t=>t.stop());liveStream=null}}
+
+/* ---------- 照片压缩 ---------- */
+function compressImage(file,maxSide=1280,q=0.72){
+  return new Promise((res,rej)=>{
+    const fr=new FileReader();
+    fr.onload=()=>{const img=new Image();
+      img.onload=()=>{
+        let w=img.naturalWidth,h=img.naturalHeight;
+        if(w>maxSide||h>maxSide){const r=Math.min(maxSide/w,maxSide/h);w=Math.round(w*r);h=Math.round(h*r)}
+        const cv=document.createElement("canvas");cv.width=w;cv.height=h;
+        const cx=cv.getContext("2d");cx.drawImage(img,0,0,w,h);
+        res({dataUrl:cv.toDataURL("image/jpeg",q),w,h});
+      };
+      img.onerror=()=>rej(new Error("图片读取失败"));
+      img.src=fr.result;
+    };
+    fr.onerror=()=>rej(new Error("文件读取失败"));
+    fr.readAsDataURL(file);
+  });
+}
+
+/* =========================================================
+   主持人端
+   ========================================================= */
+let currentRoom=null,currentPick="rhythm_8",selectedMarkerId=null,editorMode="photo";
+
+function switchEditorMode(m){
+  editorMode=m;
+  document.querySelectorAll("#editorModeTabs .mode-tab").forEach(b=>b.classList.toggle("on",b.dataset.m===m));
+  const isLive=m==="live";
+  const hasPhoto=!!(currentRoom&&currentRoom.photo);
+  $("#stageEmpty").classList.toggle("hidden",isLive||hasPhoto);
+  $("#stageWrap").classList.toggle("hidden",isLive||!hasPhoto);
+  $("#editHint").classList.toggle("hidden",isLive);
+  $("#liveWrap").classList.toggle("hidden",!isLive);
+  $("#hostLiveActions").style.display=isLive?"flex":"none";
+  if(isLive)renderLiveHostMarkers();else stopCamera();
+}
+document.querySelectorAll("#editorModeTabs .mode-tab").forEach(b=>b.addEventListener("click",()=>switchEditorMode(b.dataset.m)));
+
+function renderRoomList(){
+  const grid=$("#roomGrid");const list=rooms();
+  grid.innerHTML=list.map(r=>{
+    const total=r.cards.reduce((s,c)=>s+c.total,0);
+    const types=r.cards.reduce((m,c)=>(m[c.type]=(m[c.type]||0)+1,m),{});
+    return `<button class="room-card" data-id="${r.id}">
+      <div class="thumb">${r.photo?`<img src="${r.photo}" alt="">`:`<div class="nocard"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/></svg><span>暂无照片</span></div>`}</div>
+      <div class="meta"><span class="name">${esc(r.name)}</span><span class="sub">卡片 ${total} 张 · ${r.cards.length} 处位置</span></div>
+      <span class="room-del" data-id="${r.id}" title="删除房间" role="button">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </span>
+    </button>`;
+  }).join("")+`<button class="new-room-card" id="newRoomBtn">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      新建房间
+    </button>`;
+  grid.querySelectorAll(".room-card").forEach(b=>b.addEventListener("click",()=>openEditor(b.dataset.id)));
+  grid.querySelectorAll(".room-del").forEach(d=>d.addEventListener("click",ev=>{ev.stopPropagation();deleteRoom(d.dataset.id)}));
+  $("#newRoomBtn").addEventListener("click",createRoom);
+}
+function deleteRoom(id){
+  const list=rooms();const r=list.find(x=>x.id===id);if(!r)return;
+  if(!confirm(`删除房间「${r.name}」？\n该房间的卡片和幻乐师在本房间的寻宝印记会一并删除（幻乐师背包里的卡片保留）。`))return;
+  saveRooms(list.filter(x=>x.id!==id));
+  // 清理各幻乐师在本房间的寻宝印记（背包是跨房间统一的，保留）
+  const ps=players();let pc=false;
+  for(const k in ps){
+    if(ps[k].rooms&&ps[k].rooms[id]){delete ps[k].rooms[id];pc=true}
+  }
+  if(pc)savePlayers(ps);
+  const ss=submissions();if(ss[id]){delete ss[id];saveSubmissions(ss)}
+  renderRoomList();
+  if(playerRoom&&playerRoom.id===id){
+    stopCamera();playerRoom=null;claimed={};selectedCards=[];
+    $("#roomNowTag").textContent="";
+    $("#playerStageWrap").classList.add("hidden");
+    $("#playerLiveWrap").classList.add("hidden");
+    $("#playerStageEmpty").classList.remove("hidden");
+    $("#findHint").textContent="";
+  }
+  if(!$("#playerRoomList").classList.contains("hidden"))renderPrl();
+  toast(`已删除房间「${r.name}」`);
+}
+function createRoom(){
+  const r={id:"r_"+uid(),name:"未命名房间",photo:null,pw:0,ph:0,cards:[],createdAt:Date.now()};
+  const list=rooms();list.unshift(r);saveRooms(list);
+  playerRoom=null;  // 幻乐师端下次进入自动跟随最新房间
+  const tag=$("#roomNowTag");if(tag)tag.textContent="";
+  if(!$("#playerRoomList").classList.contains("hidden"))renderPrl();
+  openEditor(r.id);
+}
+function openEditor(id){
+  currentRoom=rooms().find(r=>r.id===id);if(!currentRoom)return;
+  currentPick="rhythm_8";selectedMarkerId=null;
+  stopCamera();
+  $("#roomListPanel").classList.add("hidden");$("#editorPanel").classList.remove("hidden");
+  $("#roomNameInput").value=currentRoom.name;
+  switchEditorMode("photo");
+  renderStage();
+  syncPickUI();
+  renderSubmissions();
+  toast("点击照片放置卡片");
+}
+function renderStage(){
+  const wrap=$("#stageWrap"),img=$("#stageImg"),empty=$("#stageEmpty");
+  if(!currentRoom.photo){empty.classList.remove("hidden");wrap.classList.add("hidden");$("#editHint").classList.add("hidden");return}
+  empty.classList.add("hidden");wrap.classList.remove("hidden");$("#editHint").classList.remove("hidden");
+  img.src=currentRoom.photo;
+  img.onload=()=>renderMarkers();
+}
+function renderMarkers(){
+  const layer=$("#markerLayer");
+  layer.innerHTML=currentRoom.cards.map(c=>{
+    const t=CARD_TYPES[c.type];
+    return `<div class="marker ${selectedMarkerId===c.id?"selected":""}" data-id="${c.id}" data-t="${c.type}" style="left:${(c.x*100).toFixed(2)}%;top:${(c.y*100).toFixed(2)}%">
+      <div class="chip">${cardIcon(c.type)}${c.silent?'<span class="silent-badge">静</span>':""}</div>
+      <div class="count">${c.total}</div>
+    </div>`;
+  }).join("");
+  layer.querySelectorAll(".marker").forEach(m=>{
+    m.addEventListener("click",ev=>{ev.stopPropagation();onMarkerClick(m.dataset.id)});
+  });
+}
+/* 主持人端统一刷新两个舞台的标记（照片 + 实景） */
+function refreshMarkers(){renderMarkers();renderLiveHostMarkers();renderPlacedRow()}
+function onMarkerClick(id){
+  const c=currentRoom.cards.find(c=>c.id===id);if(!c)return;
+  if(selectedMarkerId===id){selectedMarkerId=null;refreshMarkers();return}
+  selectedMarkerId=id;refreshMarkers();
+  showMarkerModal(c);
+}
+function onLiveMarkerClick(id){onMarkerClick(id)}
+function showMarkerModal(c){
+  const box=$("#modalBox");const t=CARD_TYPES[c.type];
+  box.innerHTML=`<h3>${cardIcon(c.type,22)} ${t.name} · 此处 ${c.total} 张${c.silent?' <span class="silent-badge" style="position:static;display:inline-block;vertical-align:1px;margin-left:4px">静音</span>':""}</h3>
+    <div style="display:flex;flex-direction:column;gap:8px;font-size:13.5px;color:var(--ink-soft)">
+      <span>点击照片其他空白处可以继续放置同种卡片。</span>
+      ${c.silent?'<span>这张是静音卡：幻乐师获得时看不到标记，只有你（主持人）能识别。</span>':""}
+    </div>
+    <div class="row">
+      <button class="btn ghost" id="mmAdd">+1 张</button>
+      <button class="btn ghost" id="mmMinus">-1 张</button>
+      <button class="btn danger" id="mmDel">删除</button>
+      <button class="btn" id="mmClose">完成</button>
+    </div>`;
+  openModal();
+  $("#mmAdd").onclick=()=>{c.total++;persistRoom();refreshMarkers();openModal();showMarkerModal(c)};
+  $("#mmMinus").onclick=()=>{if(c.total>1){c.total--;persistRoom();refreshMarkers();openModal();showMarkerModal(c)}};
+  $("#mmDel").onclick=()=>{currentRoom.cards=currentRoom.cards.filter(x=>x.id!==c.id);selectedMarkerId=null;persistRoom();refreshMarkers();closeModal()};
+  $("#mmClose").onclick=()=>{selectedMarkerId=null;refreshMarkers();closeModal()};
+}
+function persistRoom(){const list=rooms();const i=list.findIndex(r=>r.id===currentRoom.id);if(i>=0)list[i]=currentRoom;saveRooms(list)}
+function syncPickUI(){
+  document.querySelectorAll(".pick-btn").forEach(b=>b.classList.toggle("on",b.dataset.t===currentPick));
+}
+function renderPlacedRow(){
+  const row=$("#placedRow");
+  row.innerHTML=`<span style="font-size:11.5px;color:var(--ink-soft)">已放置：</span>`+CARD_ORDER.map(t=>{
+    const list=currentRoom.cards.filter(c=>c.type===t);
+    const cnt=list.reduce((s,c)=>s+c.total,0);
+    if(!cnt)return "";
+    const silent=list.filter(c=>c.silent).reduce((s,c)=>s+c.total,0);
+    return `<span class="placed-chip" data-t="${t}">${cardIcon(t,14)} ${CARD_TYPES[t].name} ×${cnt}${silent?` <span style="color:var(--ink-soft);font-size:10.5px">(静音${silent})</span>`:""} <span class="x">✕</span></span>`;
+  }).join("");
+  row.querySelectorAll(".placed-chip").forEach(ch=>ch.addEventListener("click",()=>{
+    const t=ch.dataset.t;
+    currentRoom.cards=currentRoom.cards.filter(c=>c.type!==t);
+    selectedMarkerId=null;persistRoom();renderMarkers();renderPlacedRow();
+    toast(`已移除全部${CARD_TYPES[t].name}`);
+  }));
+}
+/* ---------- 主持人实景放置 ---------- */
+function renderLiveHostMarkers(){
+  const layer=$("#liveMarkerLayer");
+  if(!currentRoom){layer.innerHTML="";return}
+  layer.innerHTML=currentRoom.cards.map(c=>{
+    return `<div class="marker ${selectedMarkerId===c.id?"selected":""}" data-id="${c.id}" data-t="${c.type}" style="left:${(c.x*100).toFixed(2)}%;top:${(c.y*100).toFixed(2)}%">
+      <div class="chip">${cardIcon(c.type)}${c.silent?'<span class="silent-badge">静</span>':""}</div>
+      <div class="count">${c.total}</div>
+    </div>`;
+  }).join("");
+  layer.querySelectorAll(".marker").forEach(m=>m.addEventListener("click",ev=>{ev.stopPropagation();onLiveMarkerClick(m.dataset.id)}));
+}
+$("#openLiveBtn").addEventListener("click",async ()=>{
+  const ok=await openCamera($("#liveVideo"));
+  if(ok){
+    $("#liveCamOff").classList.add("hidden");
+    $("#liveVideo").classList.remove("hidden");
+    $("#liveMarkerLayer").classList.remove("hidden");
+    toast("点击画面放置卡片，放完点「定格保存」");
+  }
+});
+$("#closeLiveBtn").addEventListener("click",()=>{
+  stopCamera();
+  $("#liveCamOff").classList.remove("hidden");
+  $("#liveVideo").classList.add("hidden");
+  $("#liveMarkerLayer").classList.add("hidden");
+});
+$("#liveWrap").addEventListener("click",ev=>{
+  if(editorMode!=="live")return;
+  if(ev.target.closest(".marker"))return;
+  if(ev.target.closest("#liveCamOff"))return;
+  if(!$("#liveVideo").srcObject)return;
+  const rect=$("#liveWrap").getBoundingClientRect();
+  const x=(ev.clientX-rect.left)/rect.width, y=(ev.clientY-rect.top)/rect.height;
+  if(x<0||x>1||y<0||y>1)return;
+  currentRoom.cards.push({id:"c_"+uid(),type:currentPick,x,y,total:1,silent:(currentPick==="note_fa"||currentPick==="rhythm_8")&&Math.random()<0.1});
+  selectedMarkerId=null;persistRoom();renderLiveHostMarkers();renderPlacedRow();
+  playCardSound(currentPick);
+});
+function freezeFrame(v){
+  const max=1280;let w=v.videoWidth||640,h=v.videoHeight||480;
+  if(w>max||h>max){const r=Math.min(max/w,max/h);w=Math.round(w*r);h=Math.round(h*r)}
+  const cv=document.createElement("canvas");cv.width=w;cv.height=h;
+  cv.getContext("2d").drawImage(v,0,0,w,h);
+  return {dataUrl:cv.toDataURL("image/jpeg",0.78),w,h};
+}
+function showFreezeDone(){
+  const box=$("#modalBox");
+  box.innerHTML=`<h3>房间地图已生成</h3>
+    <div style="font-size:13.5px;line-height:1.8;color:var(--ink-soft)">
+      已把当前画面定格为房间地图，共 <b>${currentRoom.cards.reduce((s,c)=>s+c.total,0)}</b> 张卡片。<br>
+      同一台设备直接玩：切到「幻乐师」端，打开实景寻宝，把手机对准相同画面即可开始寻找。<br>
+      <span style="color:var(--c-do)">提示：八分音符和音符 Fa 中约有 10% 是静音卡，只有主持人能看到静音标记。</span>
+    </div>
+    <div class="row">
+      <button class="btn" id="fdGo">去幻乐师寻宝</button>
+      <button class="btn ghost" id="fdClose">完成</button>
+    </div>`;
+  openModal();
+  $("#fdGo").onclick=()=>{closeModal();switchMode("player")};
+  $("#fdClose").onclick=closeModal;
+}
+$("#freezeBtn").addEventListener("click",()=>{
+  const v=$("#liveVideo");
+  if(!v.srcObject||!v.videoWidth){toast("请先打开摄像头");return}
+  if(!currentRoom.cards.length){toast("先放置至少一张卡片再定格");return}
+  const {dataUrl,w,h}=freezeFrame(v);
+  currentRoom.photo=dataUrl;currentRoom.pw=w;currentRoom.ph=h;
+  persistRoom();
+  showFreezeDone();
+});
+
+/* 主持人放置：点空白处放新卡；点已有卡片弹出编辑（+1/-1/删除） */
+$("#stageWrap").addEventListener("click",ev=>{
+  if(ev.target.closest(".marker"))return;
+  const rect=ev.currentTarget.getBoundingClientRect();
+  const x=(ev.clientX-rect.left)/rect.width, y=(ev.clientY-rect.top)/rect.height;
+  if(x<0||x>1||y<0||y>1)return;
+  currentRoom.cards.push({id:"c_"+uid(),type:currentPick,x,y,total:1,silent:(currentPick==="note_fa"||currentPick==="rhythm_8")&&Math.random()<0.1});
+  selectedMarkerId=null;persistRoom();renderMarkers();renderPlacedRow();
+  playCardSound(currentPick);
+});
+document.querySelectorAll(".pick-btn").forEach(b=>b.addEventListener("click",()=>{currentPick=b.dataset.t;syncPickUI()}));
+$("#photoInput").addEventListener("change",async ev=>{
+  const f=ev.target.files[0];if(!f)return;
+  try{
+    toast("照片处理中…");
+    const {dataUrl,w,h}=await compressImage(f);
+    currentRoom.photo=dataUrl;currentRoom.pw=w;currentRoom.ph=h;
+    persistRoom();renderStage();toast("照片已就位，点击放置卡片");
+  }catch(e){toast(e.message||"照片处理失败")}
+  ev.target.value="";
+});
+$("#cameraBtn").addEventListener("click",()=>$("#photoInput").click());
+$("#photoFileBtn").addEventListener("click",()=>{
+  const inp=$("#photoInput");inp.removeAttribute("capture");inp.click();inp.setAttribute("capture","environment");
+});
+$("#roomNameInput").addEventListener("input",()=>{currentRoom.name=$("#roomNameInput").value.trim()||"未命名房间";persistRoom()});
+$("#clearMarkers").addEventListener("click",()=>{
+  if(!currentRoom.cards.length)return;
+  if(confirm("清空照片上所有已放置的卡片？")){currentRoom.cards=[];selectedMarkerId=null;persistRoom();refreshMarkers()}
+});
+$("#saveRoomBtn").addEventListener("click",()=>{
+  persistRoom();
+  toast("房间已保存到本机");
+  showRoomSavedModal();
+});
+function showRoomSavedModal(){
+  const box=$("#modalBox");
+  box.innerHTML=`<h3>房间已保存</h3>
+    <div style="font-size:13.5px;line-height:1.8;color:var(--ink-soft)">
+      本机已保存：<b>${esc(currentRoom.name)}</b>（${currentRoom.cards.reduce((s,c)=>s+c.total,0)} 张卡片）。<br>
+      同一台设备直接玩：切到「幻乐师」端选择这个房间，就能开始寻宝。
+    </div>
+    <div class="row">
+      <button class="btn" id="msGo">去幻乐师寻宝</button>
+      <button class="btn ghost" id="msClose">完成</button>
+    </div>`;
+  openModal();
+  $("#msGo").onclick=()=>{closeModal();switchMode("player")};
+  $("#msClose").onclick=closeModal;
+}
+$("#backToList").addEventListener("click",()=>{
+  if(!currentRoom)return;
+  persistRoom();
+  stopCamera();
+  currentRoom=null;selectedMarkerId=null;editorMode="photo";
+  $("#editorPanel").classList.add("hidden");$("#roomListPanel").classList.remove("hidden");
+  renderRoomList();
+});
+
+/* =========================================================
+   幻乐师端
+   ========================================================= */
+let playerRoom=null,playerName="",backpack={note_fa:0,rhythm_8:0,play:0},claimed={};
+let playerCards=[];        // 卡实例：{i,type,silent}，跨房间统一的独立收获
+let selectedCards=[];      // 选中提交的卡实例 id
+const LS_SUBMIT="mh_submissions_v1";
+/* 幻乐师数据（跨房间统一背包）：
+   { playerName, backpack, cards:[实例], rooms:{roomId:claimed}, updatedAt } */
+function savePlayerState(){
+  if(!playerName||!playerRoom)return;
+  const p=players();
+  const rec=p[playerName]||{playerName,backpack:{note_fa:0,rhythm_8:0,play:0},cards:[],rooms:{},updatedAt:0};
+  rec.backpack=backpack;rec.cards=playerCards;
+  rec.rooms=rec.rooms||{};rec.rooms[playerRoom.id]=claimed;
+  rec.updatedAt=Date.now();
+  p[playerName]=rec;savePlayers(p);
+}
+function loadPlayerState(){
+  backpack={note_fa:0,rhythm_8:0,play:0};claimed={};playerCards=[];
+  if(!playerName){selectedCards=[];renderBp();return}
+  const p=players();
+  let rec=p[playerName];
+  if(!rec){
+    // 迁移旧版数据（roomId::playerName 形式）：合并背包、保留各房间进度
+    const legacy=Object.entries(p).filter(([k,v])=>k.endsWith("::"+playerName)&&v&&v.playerName===playerName);
+    if(legacy.length){
+      rec={playerName,backpack:{note_fa:0,rhythm_8:0,play:0},cards:[],rooms:{},updatedAt:0};
+      legacy.forEach(([k,v])=>{
+        for(const t in v.backpack)rec.backpack[t]=(rec.backpack[t]||0)+(v.backpack[t]||0);
+        rec.cards=rec.cards.concat(Array.isArray(v.cards)?v.cards.map(c=>({i:c.i||uid(),type:c.type,silent:!!c.silent})):
+          (()=>{const arr=[];for(const t in v.backpack)for(let n=0;n<(v.backpack[t]||0);n++)arr.push({i:uid(),type:t,silent:false});return arr})());
+        rec.rooms[k.split("::")[0]]=v.claimed||{};
+        delete p[k];
+      });
+      p[playerName]=rec;savePlayers(p);
+    }
+  }
+  if(rec){
+    backpack=rec.backpack||backpack;
+    playerCards=Array.isArray(rec.cards)?rec.cards.map(c=>({i:c.i||uid(),type:c.type,silent:!!c.silent})):
+      (()=>{const arr=[];for(const t in backpack)for(let n=0;n<(backpack[t]||0);n++)arr.push({i:uid(),type:t,silent:false});return arr})();
+    if(playerRoom)claimed=(rec.rooms&&rec.rooms[playerRoom.id])||{};
+  }
+  selectedCards=[];renderBp();
+}
+function submissions(){return load(LS_SUBMIT,{})}
+function saveSubmissions(s){save(LS_SUBMIT,s)}
+function renderSubmissions(){
+  if(!currentRoom)return;
+  const list=(submissions()[currentRoom.id]||[]).slice().reverse();
+  const box=$("#submissionsList");
+  if(!list.length){box.innerHTML=`<span style="font-size:12px;color:var(--ink-soft)">还没有幻乐师提交，幻乐师在背包里选两张卡片提交后会显示在这里。</span>`;return}
+  box.innerHTML=list.map(s=>{
+    const cards=s.cards.map(c=>{
+      const t=CARD_TYPES[c.type];
+      return `<span class="sub-card" style="color:${t.color.replace('var(--c-fa)','#6FAE4E').replace('var(--c-rhythm)','#3D6B99').replace('var(--c-play)','#C98A2D')};border-color:${t.color.replace('var(--c-fa)','#6FAE4E').replace('var(--c-rhythm)','#3D6B99').replace('var(--c-play)','#C98A2D')}">${cardIcon(c.type,16)}${CARD_TYPES[c.type].name}${c.silent?'<span class="silent-badge">静</span>':""}</span>`;
+    }).join("");
+    return `<div class="submit-item"><span class="who">${esc(s.playerName)}</span><span style="color:var(--ink-soft);font-size:12px">提交了</span><span class="submit-cards">${cards}</span></div>`;
+  }).join("")+`<div class="submit-clear" onclick="clearSubmissions()">清空本房间提交记录</div>`;
+}
+function clearSubmissions(){
+  if(!currentRoom)return;
+  const s=submissions();delete s[currentRoom.id];saveSubmissions(s);
+  renderSubmissions();toast("已清空提交记录");
+}
+function remaining(c){return c.total-(claimed[c.id]||0)}
+
+/* 幻乐师房间列表（上一层） */
+function showPlayerRoomList(){
+  stopCamera();
+  $("#playerHuntPanel").classList.add("hidden");
+  $("#playerRoomList").classList.remove("hidden");
+  renderPrl();
+}
+function renderPrl(){
+  const grid=$("#prlGrid");
+  const list=rooms();
+  if(!list.length){grid.innerHTML=`<div class="prl-empty">还没有房间<br>先让主持人在主持人端新建房间、放好卡片。</div>`;return}
+  const data=playerName?(players()[playerName]||null):null;
+  grid.innerHTML=list.map(r=>{
+    const cl=(data&&data.rooms&&data.rooms[r.id])||{};
+    const got=Object.values(cl).reduce((s,n)=>s+n,0);
+    const cur=!!(playerRoom&&playerRoom.id===r.id);
+    return `<button class="prl-card ${cur?"cur":""}" data-id="${r.id}">
+      <span class="prl-name">${esc(r.name)}</span>
+      <span class="prl-count">${got?`已找到 ${got} 张`:"还没有收获"}</span>
+    </button>`;
+  }).join("");
+}
+$("#prlGrid").addEventListener("click",ev=>{
+  const b=ev.target.closest(".prl-card");
+  if(b)enterPlayerRoom(b.dataset.id);
+});
+
+function enterPlayerRoom(id){
+  playerRoom=rooms().find(r=>r.id===id);
+  if(!playerRoom)return;
+  $("#playerRoomList").classList.add("hidden");
+  $("#playerHuntPanel").classList.remove("hidden");
+  const tag=$("#roomNowTag");
+  tag.textContent=`当前房间：${playerRoom.name}`;
+  loadPlayerState();
+  const wrap=$("#playerStageWrap"),img=$("#playerStageImg"),empty=$("#playerStageEmpty");
+  if(playerRoom.photo){
+    empty.classList.add("hidden");wrap.classList.remove("hidden");
+    img.src=playerRoom.photo;
+    img.onload=()=>renderPlayerMarkers();
+  }else{
+    wrap.classList.add("hidden");empty.classList.remove("hidden");
+    empty.querySelector(".hint").innerHTML="该房间还没有照片地图";
+  }
+}
+/* 寻宝隐藏模式：卡片不显示，点击可能的位置触发获取 */
+const HIT_RADIUS=0.075;
+function renderPlayerMarkers(){
+  const layer=$("#playerMarkerLayer");
+  layer.innerHTML=playerRoom.cards.map(c=>{
+    const got=claimed[c.id]||0,left=remaining(c);
+    if(!got)return "";
+    return `<div class="found-mark ${left<=0?"done":""}" style="left:${(c.x*100).toFixed(2)}%;top:${(c.y*100).toFixed(2)}%">${left<=0?"✓":got}</div>`;
+  }).join("");
+  const got=playerRoom.cards.reduce((s,c)=>s+(claimed[c.id]||0),0);
+  $("#findHint").textContent=got?`已找到 ${got} 张卡片，继续点击可能藏卡的位置寻找`:`卡片藏在照片里（不显示数量），点击可能藏卡的位置寻找`;
+}
+function findCardAt(x,y){
+  let best=null;
+  for(const c of playerRoom.cards){
+    if(remaining(c)<=0)continue;
+    const d=Math.hypot(c.x-x,c.y-y);
+    if(d<=HIT_RADIUS&&(best===null||d<best.d))best={c,d};
+  }
+  return best?best.c:null;
+}
+function claimAt(x,y,mode){
+  if(!playerName){toast("先填一个昵称再开始寻宝");$("#playerNameInput").focus();return}
+  const c=findCardAt(x,y);
+  if(!c){
+    const done=playerRoom.cards.some(k=>Math.hypot(k.x-x,k.y-y)<=HIT_RADIUS);
+    if(done)toast("这里的卡片已经拿过啦");
+    else{toast("这里没有卡片，换个别的位置试试");rippleAt(x,y,mode)}
+    playFail();
+    return;
+  }
+  claimed[c.id]=(claimed[c.id]||0)+1;
+  backpack[c.type]=(backpack[c.type]||0)+1;
+  playerCards.push({i:uid(),type:c.type,silent:!!c.silent});
+  savePlayerState();
+  playCardSound(c.type);
+  if(mode==="live"){
+    const img=$("#playerAlignImg");
+    const ir=img.getBoundingClientRect();
+    const px=ir.left+x*ir.width, py=ir.top+y*ir.height;
+    setTimeout(()=>flyCardToBackpack(c.type,{left:px-26,top:py-26,width:52,height:52}),330);
+  }else{
+    const rect=$("#playerStageWrap").getBoundingClientRect();
+    const px=rect.left+x*rect.width, py=rect.top+y*rect.height;
+    setTimeout(()=>flyCardToBackpack(c.type,{left:px-26,top:py-26,width:52,height:52}),330);
+  }
+  foundPop(c.type,x,y,mode);
+  if(mode==="live")renderLivePlayerMarkers();else renderPlayerMarkers();
+  renderBp();
+  const left=remaining(c);
+  toast(left>0?`找到 ${CARD_TYPES[c.type].name}！这里还有 ${left} 张`:`找到 ${CARD_TYPES[c.type].name}！这处取完`);
+}
+function foundPop(type,x,y,mode){
+  const host=mode==="live"?$("#playerAlignLayer"):$("#playerStageWrap");
+  if(!host)return;
+  const el=document.createElement("div");
+  el.className="found-pop";
+  const color=CARD_TYPES[type].color.replace("var(--c-fa)","#6FAE4E").replace("var(--c-rhythm)","#3D6B99").replace("var(--c-play)","#C98A2D");
+  el.style.borderColor=color;el.style.color=color;
+  const p=mode==="live"?liveLayerPct(x,y):{px:x,py:y};
+  el.style.left=(p.px*100).toFixed(2)+"%";el.style.top=(p.py*100).toFixed(2)+"%";
+  el.innerHTML=cardIcon(type);
+  host.appendChild(el);
+  setTimeout(()=>el.remove(),900);
+}
+function rippleAt(x,y,mode){
+  const host=mode==="live"?$("#playerAlignLayer"):$("#playerStageWrap");
+  if(!host)return;
+  const el=document.createElement("div");
+  el.className="ripple";
+  const p=mode==="live"?liveLayerPct(x,y):{px:x,py:y};
+  el.style.left=(p.px*100).toFixed(2)+"%";el.style.top=(p.py*100).toFixed(2)+"%";
+  host.appendChild(el);
+  setTimeout(()=>el.remove(),550);
+}
+$("#playerStageWrap").addEventListener("click",ev=>{
+  if(!playerRoom||!playerRoom.photo)return;
+  if(ev.target.closest(".found-mark"))return;
+  const rect=ev.currentTarget.getBoundingClientRect();
+  const x=(ev.clientX-rect.left)/rect.width,y=(ev.clientY-rect.top)/rect.height;
+  if(x<0||x>1||y<0||y>1)return;
+  claimAt(x,y,"photo");
+});
+function renderBp(){
+  const wrap=$("#bpSlots");
+  const cnt=playerCards.length;
+  $("#bpCount").textContent=cnt?`共 ${cnt} 张`:"";
+  if(!cnt){
+    wrap.innerHTML=`<div style="width:100%;font-size:12px;color:var(--ink-soft);padding:6px 2px">还没有卡片，去实景或照片里寻找吧</div>`;
+    updateSubmitBtn();
+    return;
+  }
+  wrap.innerHTML=playerCards.map(cd=>{
+    const t=CARD_TYPES[cd.type];
+    const sel=selectedCards.includes(cd.i);
+    return `<div class="bp-card ${sel?"sel":""}" data-i="${cd.i}" data-t="${cd.type}">
+      ${cardIcon(cd.type,24)}<span class="nm">${t.name}</span>
+    </div>`;
+  }).join("");
+  wrap.querySelectorAll(".bp-card").forEach(el=>{
+    el.addEventListener("click",()=>toggleSelect(el.dataset.i));
+  });
+  updateSubmitBtn();
+}
+function toggleSelect(i){
+  if(selectedCards.includes(i))selectedCards=selectedCards.filter(x=>x!==i);
+  else{
+    if(selectedCards.length>=2){toast("每次最多选两张卡片提交");return}
+    selectedCards.push(i);
+  }
+  renderBp();
+  const cd=playerCards.find(c=>c.i===i);
+  if(cd)playCardSound(cd.type);
+}
+function updateSubmitBtn(){
+  const btn=$("#submitBtn");
+  btn.textContent=`提交选中（${selectedCards.length}/2）`;
+  btn.disabled=selectedCards.length!==2;
+}
+function submitCards(){
+  if(selectedCards.length!==2){toast("先选两张卡片再提交");return}
+  const picks=playerCards.filter(c=>selectedCards.includes(c.i));
+  if(picks.length!==2){selectedCards=[];renderBp();return}
+  playerCards=playerCards.filter(c=>!selectedCards.includes(c.i));
+  picks.forEach(c=>{if(backpack[c.type]>0)backpack[c.type]--});
+  const s=submissions();
+  if(!s[playerRoom.id])s[playerRoom.id]=[];
+  s[playerRoom.id].push({playerName,cards:picks.map(c=>({type:c.type,silent:!!c.silent})),time:Date.now()});
+  saveSubmissions(s);
+  selectedCards=[];savePlayerState();renderBp();
+  toast(`已把 2 张卡片交给主持人`);
+}
+function flyCardToBackpack(type,from){
+  if(!from)return;
+  const r1=typeof from.getBoundingClientRect==="function"?from.getBoundingClientRect():from;
+  const targets=$("#bpSlots").querySelectorAll(".bp-card[data-t='"+type+"']");
+  const target=targets.length?targets[targets.length-1]:null;
+  const r2=target?target.getBoundingClientRect():null;
+  const fly=document.createElement("div");
+  fly.className="fly-card";
+  const color=CARD_TYPES[type].color.replace("var(--c-fa)","#6FAE4E").replace("var(--c-rhythm)","#3D6B99").replace("var(--c-play)","#C98A2D");
+  fly.style.borderColor=color;fly.style.color=color;
+  fly.style.left=(r1.left+r1.width/2-26)+"px";fly.style.top=(r1.top+r1.height/2-26)+"px";
+  fly.innerHTML=cardIcon(type);
+  $("#flyLayer").appendChild(fly);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    if(r2){fly.style.transform=`translate(${r2.left+r2.width/2-(r1.left+r1.width/2)}px,${r2.top+r2.height/2-(r1.top+r1.height/2)}px) scale(.35)`;fly.style.opacity=".25"}
+    else{fly.style.opacity="0";fly.style.transform="translateY(40px) scale(.5)"}
+  }));
+  setTimeout(()=>fly.remove(),620);
+}
+/* =========================================================
+   幻乐师实景寻宝（摄像头 + 半透明地图对准）
+   ========================================================= */
+let alignScale=1,alignOp=.45;
+function applyAlign(){$("#playerAlignLayer").style.transform=`scale(${alignScale})`}
+/* 照片在视频区内等比居中（contain）显示；把照片坐标换算成对准层内的百分比 */
+function liveLayerPct(x,y){
+  const img=$("#playerAlignImg"),layer=$("#playerAlignLayer");
+  const ir=img.getBoundingClientRect(),lr=layer.getBoundingClientRect();
+  if(!ir.width||!ir.height)return {px:x,py:y};
+  const px=(ir.left-lr.left)/lr.width + x*ir.width/lr.width;
+  const py=(ir.top-lr.top)/lr.height + y*ir.height/lr.height;
+  return {px,py};
+}
+function renderLivePlayerMarkers(){
+  const layer=$("#playerLiveMarkerLayer");
+  layer.innerHTML=playerRoom.cards.map(c=>{
+    const got=claimed[c.id]||0,left=remaining(c);
+    if(!got)return "";
+    const p=liveLayerPct(c.x,c.y);
+    return `<div class="found-mark ${left<=0?"done":""}" style="left:${(p.px*100).toFixed(2)}%;top:${(p.py*100).toFixed(2)}%">${left<=0?"✓":got}</div>`;
+  }).join("");
+}
+/* 实景点击：坐标以照片实际显示区域（img rect，兼容 contain 与缩放）为基准 */
+$("#playerLiveStage").addEventListener("click",ev=>{
+  if(!playerRoom)return;
+  if(ev.target.closest(".found-mark"))return;
+  const img=$("#playerAlignImg");
+  const rect=img.getBoundingClientRect();
+  const x=(ev.clientX-rect.left)/rect.width,y=(ev.clientY-rect.top)/rect.height;
+  if(x<0||x>1||y<0||y>1)return;
+  claimAt(x,y,"live");
+});
+function exitLiveHunt(){
+  stopCamera();
+  $("#playerLiveWrap").classList.add("hidden");
+  $("#playerStageWrap").classList.remove("hidden");
+  $("#findHint").classList.remove("hidden");
+  $("#liveHuntBtn").classList.remove("hidden");
+  renderPlayerMarkers();
+}
+$("#liveHuntBtn").addEventListener("click",async ()=>{
+  if(!playerRoom){toast("请先进入房间");return}
+  if(!playerRoom.photo){toast("该房间还没有地图：请主持人先在实景/照片模式保存房间");return}
+  alignScale=1;alignOp=.45;
+  $("#playerAlignImg").style.opacity=alignOp;
+  $("#playerAlignImg").classList.remove("hidden");
+  applyAlign();
+  $("#playerStageWrap").classList.add("hidden");
+  $("#findHint").classList.add("hidden");
+  $("#liveHuntBtn").classList.add("hidden");
+  $("#playerLiveWrap").classList.remove("hidden");
+  $("#playerAlignImg").src=playerRoom.photo;
+  renderLivePlayerMarkers();
+  const ok=await openCamera($("#playerLiveVideo"));
+  if(ok){
+    $("#playerLiveCamOff").classList.add("hidden");
+    $("#playerLiveStage").classList.remove("hidden");
+    toast("转动手机让实景与半透明地图重合，直接点击可能藏卡的位置");
+  }else{
+    exitLiveHunt();
+  }
+});
+$("#openPlayerLiveBtn").addEventListener("click",async ()=>{
+  const ok=await openCamera($("#playerLiveVideo"));
+  if(ok){$("#playerLiveCamOff").classList.add("hidden");$("#playerLiveStage").classList.remove("hidden")}
+});
+$("#exitLiveBtn").addEventListener("click",exitLiveHunt);
+$("#alignTransBtn").addEventListener("click",()=>{
+  alignOp=alignOp>.6?.2:(alignOp<.4?.6:.8);
+  $("#playerAlignImg").style.opacity=alignOp;
+});
+$("#alignZoomIn").addEventListener("click",()=>{alignScale=Math.min(1.7,+(alignScale+.1).toFixed(2));applyAlign()});
+$("#alignZoomOut").addEventListener("click",()=>{alignScale=Math.max(.5,+(alignScale-.1).toFixed(2));applyAlign()});
+
+/* ---------- 模式切换（下拉菜单）---------- */
+function switchMode(m){
+  const isPlayer=m==="player";
+  $("#modeSelect").value=m;
+  $("#hostView").classList.toggle("hidden",isPlayer);
+  $("#playerView").classList.toggle("hidden",!isPlayer);
+  if(isIOS)$("#iosMuteTip").classList.toggle("hidden",isPlayer);
+  if(isPlayer){
+    if(!playerRoom){
+      const list=rooms();
+      if(list.length)enterPlayerRoom(list[0].id);
+      else showPlayerRoomList();
+    }else{
+      const tag=$("#roomNowTag");
+      if(tag&&playerRoom)tag.textContent=`当前房间：${playerRoom.name}`;
+      renderPlayerMarkers();
+    }
+    renderBp();
+  }else{
+    renderRoomList();
+    if(currentRoom)renderSubmissions();
+    stopCamera();
+  }
+}
+$("#modeSelect").addEventListener("change",ev=>switchMode(ev.target.value));
+$("#backToRoomsBtn").addEventListener("click",showPlayerRoomList);
+$("#playerNameInput").addEventListener("input",()=>{
+  const v=$("#playerNameInput").value.trim();
+  if(v!==playerName){playerName=v;if(playerRoom)loadPlayerState();renderPrl();}
+});
+$("#submitBtn").addEventListener("click",submitCards);
+$("#resetClaimBtn").addEventListener("click",()=>{
+  if(!playerRoom)return;
+  if(confirm(`清空「${playerRoom.name}」中 ${playerName||"当前幻乐师"} 的寻宝印记？背包里的卡片会保留（跨房间统一）。`)){
+    claimed={};selectedCards=[];
+    savePlayerState();renderPlayerMarkers();renderBp();toast("已重置本房间印记，重新寻找");
+  }
+});
+$("#clearBpBtn").addEventListener("click",()=>{
+  if(!confirm("清空背包里的所有卡片？\n（寻宝印记保留，此操作不可恢复）"))return;
+  backpack={note_fa:0,rhythm_8:0,play:0};playerCards=[];selectedCards=[];
+  savePlayerState();renderBp();toast("背包已清空");
+});
+
+/* ---------- 弹窗 ---------- */
+function openModal(){$("#modalMask").classList.remove("hidden")}
+function closeModal(){$("#modalMask").classList.add("hidden")}
+$("#modalMask").addEventListener("click",ev=>{if(ev.target.id==="modalMask")closeModal()});
+
+/* ---------- 初始化 ---------- */
+renderRoomList();
+renderBp();
+if(isIOS){/* 提示已显示 */}
+</script>
+</body>
+</html>

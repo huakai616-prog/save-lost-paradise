@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#2B2620">
+<title>拯救失乐园</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23B45309' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 18V5l12-2v13'/%3E%3Ccircle cx='6' cy='18' r='3'/%3E%3Ccircle cx='18' cy='16' r='3'/%3E%3C/svg%3E">
+<style>
+/* 外壳：顶部切换两个游戏；游戏本体原样放在同源 iframe 里，localStorage 互通（合成台「从寻宝同步」可用） */
+:root{--bg:#F5F0E4;--ink:#2B2620;--accent:#B45309;--accent-ink:#FFF6E8}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--bg)}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  color:var(--ink);display:flex;flex-direction:column;height:100dvh;
+}
+.game-nav{flex:none;background:var(--ink);padding:6px 8px}
+.game-tabs{display:flex;align-items:center;gap:6px;max-width:520px;margin:0 auto}
+.game-tab{
+  flex:1;height:38px;border:none;border-radius:10px;background:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  font:inherit;font-size:14.5px;font-weight:800;letter-spacing:.5px;color:#CFC6B4;
+}
+.game-tab .num{
+  width:19px;height:19px;border-radius:50%;border:1.5px solid currentColor;
+  display:grid;place-items:center;font-size:11px;letter-spacing:0;
+}
+.game-tab.on{background:var(--bg);color:var(--ink)}
+.game-tab.on .num{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.game-tab:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.flow{flex:none;color:#8A8070;font-size:13px}
+.frames{flex:1;position:relative;min-height:0}
+.frames iframe{
+  position:absolute;top:0;left:0;width:100%;height:100%;border:0;display:block;background:var(--bg);
+  visibility:hidden;pointer-events:none;
+}
+.frames iframe.on{visibility:visible;pointer-events:auto;z-index:1}
+</style>
+</head>
+<body>
+
+<nav class="game-nav">
+  <div class="game-tabs" role="tablist" aria-label="切换游戏">
+    <button class="game-tab" role="tab" data-game="hunt" aria-controls="frame-hunt"><span class="num">1</span>音乐寻宝</button>
+    <span class="flow" aria-hidden="true">→</span>
+    <button class="game-tab" role="tab" data-game="synth" aria-controls="frame-synth"><span class="num">2</span>音乐合成台</button>
+  </div>
+</nav>
+
+<div class="frames">
+  <iframe id="frame-hunt" data-src="hunt.html" title="音乐寻宝" allow="camera; autoplay"></iframe>
+  <iframe id="frame-synth" data-src="synth.html" title="音乐合成台" allow="camera; autoplay"></iframe>
+</div>
+
+<script>
+"use strict";
+const LS_TAB="lp_shell_tab_v1";
+const TITLES={hunt:"音乐寻宝",synth:"音乐合成台"};
+const frames={hunt:document.getElementById("frame-hunt"),synth:document.getElementById("frame-synth")};
+const tabs=document.querySelectorAll(".game-tab");
+let cur=null;
+
+function loadFrame(key){
+  const f=frames[key];
+  if(!f.dataset.loaded){f.dataset.loaded="1";f.src=f.dataset.src}
+}
+/* 离开寻宝页时关掉摄像头：走游戏自己的关闭按钮，界面状态保持一致 */
+function releaseCamera(){
+  try{
+    const d=frames.hunt.contentDocument;if(!d)return;
+    const live=id=>{const v=d.getElementById(id);return !!(v&&v.srcObject&&v.srcObject.active)};
+    if(live("playerLiveVideo"))d.getElementById("exitLiveBtn").click();
+    if(live("liveVideo"))d.getElementById("closeLiveBtn").click();
+  }catch(e){}
+}
+function show(key){
+  if(!frames[key])key="hunt";
+  if(key===cur)return;
+  if(cur==="hunt")releaseCamera();
+  loadFrame(key);
+  for(const k in frames)frames[k].classList.toggle("on",k===key);
+  tabs.forEach(t=>{const on=t.dataset.game===key;t.classList.toggle("on",on);t.setAttribute("aria-selected",String(on))});
+  cur=key;
+  document.title=`拯救失乐园 · ${TITLES[key]}`;
+  try{if(location.hash!=="#"+key)history.replaceState(null,"","#"+key)}catch(e){}
+  try{localStorage.setItem(LS_TAB,key)}catch(e){}
+}
+tabs.forEach(t=>t.addEventListener("click",()=>show(t.dataset.game)));
+window.addEventListener("hashchange",()=>show(location.hash.slice(1)));
+
+let first=location.hash.slice(1);
+if(!frames[first]){try{first=localStorage.getItem(LS_TAB)}catch(e){first=null}}
+show(frames[first]?first:"hunt");
+/* 当前游戏加载完后在后台预载另一个，切换时秒开 */
+frames[cur].addEventListener("load",()=>{for(const k in frames)loadFrame(k)},{once:true});
+</script>
+</body>
+</html>

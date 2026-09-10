@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>拯救失乐园 · 音乐合成台</title>
+<style>
+/* ============ 设计 token ============ */
+:root{
+  --bg:#F5F0E4;--paper:#FDFBF4;--ink:#2B2620;--ink-soft:#6E6557;
+  --line:#D8CFBC;--staff:#B9AC93;--accent:#B45309;--accent-ink:#FFF6E8;
+  --c-do:#E2574C;--c-re:#E8893C;--c-mi:#DFB63C;
+  --c-fa:#6FAE4E;--c-sol:#3FA9A0;--c-la:#4E7FC4;--c-ti:#8A6BBE;
+  --c-rhythm:#3D6B99;--c-play:#C98A2D;
+  --ok:#2E7D4F;--warn:#B45309;--err:#C0392B;
+  --r-lg:18px;--r-md:12px;--r-sm:8px;--shadow:0 2px 10px rgba(43,38,32,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  background:var(--bg);color:var(--ink);
+  display:flex;flex-direction:column;min-height:100dvh;
+}
+button{font-family:inherit;border:none;background:none;cursor:pointer;color:inherit}
+input,select{font-family:inherit;font-size:15px;border:1.5px solid var(--line);border-radius:var(--r-sm);padding:9px 12px;background:var(--paper);color:var(--ink)}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+.hidden{display:none !important}
+
+/* 顶栏 */
+header{
+  position:sticky;top:0;z-index:50;background:var(--bg);
+  padding:10px 14px calc(10px + env(safe-area-inset-top));
+  border-bottom:1.5px solid var(--line);
+  display:flex;align-items:center;gap:10px;
+}
+.logo{display:flex;align-items:center;gap:8px;font-weight:800;font-size:17px;letter-spacing:.5px}
+.logo svg{flex:none}
+.mode-select{
+  margin-left:auto;background:var(--paper);border:1.5px solid var(--line);border-radius:999px;
+  padding:7px 14px;font-size:13.5px;font-weight:700;color:var(--ink);appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236E6557' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;padding-right:30px;
+}
+.icon-btn{
+  width:38px;height:38px;border-radius:10px;display:grid;place-items:center;
+  border:1.5px solid var(--line);background:var(--paper);flex:none;
+}
+.icon-btn:active{transform:scale(.94)}
+
+main{flex:1;width:100%;max-width:820px;margin:0 auto;padding:14px 14px calc(20px + env(safe-area-inset-bottom))}
+
+/* ============ 音阶阶梯 ============ */
+.scale-strip{
+  display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:14px;
+}
+.scale-step{
+  border-radius:var(--r-sm);padding:8px 2px 6px;text-align:center;
+  border:1.8px solid;font-weight:800;font-size:14px;background:var(--paper);
+  position:relative;transition:transform .15s;
+}
+.scale-step small{display:block;font-size:9.5px;font-weight:600;opacity:.65;margin-top:1px}
+.scale-step.active{transform:scale(1.08);box-shadow:0 3px 10px rgba(0,0,0,.18)}
+.scale-step.muted{opacity:.38}
+
+/* ============ 通用 ============ */
+.section-title{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:800;color:var(--ink-soft);margin:16px 2px 8px;flex-wrap:wrap}
+.section-title .spacer{flex:1}
+.pill-btn{
+  display:inline-flex;align-items:center;gap:4px;border:1.5px solid var(--line);background:var(--paper);
+  border-radius:999px;padding:5px 12px;font-size:12px;font-weight:700;color:var(--ink);
+}
+.pill-btn:active{transform:scale(.96)}
+.mini-select{
+  font-size:13px;font-weight:700;padding:6px 10px;border-radius:999px;max-width:150px;
+}
+.btn{
+  padding:11px;border-radius:var(--r-md);font-size:14px;font-weight:700;text-align:center;
+  background:var(--accent);color:var(--accent-ink);box-shadow:var(--shadow);
+}
+.btn.ghost{background:var(--paper);border:1.5px solid var(--line);color:var(--ink);box-shadow:none}
+.btn.danger{background:var(--err);color:#fff}
+.empty{font-size:12.5px;color:var(--ink-soft);background:#F1EADA;border:1.2px dashed var(--line);border-radius:var(--r-sm);padding:14px;text-align:center;margin-top:8px}
+
+/* ============ 主持人：幻乐师管理 ============ */
+.host-toolbar{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  background:var(--paper);border:1.5px solid var(--line);border-radius:var(--r-lg);
+  padding:12px;margin-bottom:12px;box-shadow:var(--shadow);
+}
+.host-toolbar .btn{flex:none;padding:10px 14px;font-size:13.5px}
+.ht-tip{font-size:12px;color:var(--ink-soft);line-height:1.6;flex:1;min-width:200px}
+.player-card{
+  background:var(--paper);border:1.5px solid var(--line);border-radius:var(--r-lg);
+  padding:12px;margin-bottom:10px;box-shadow:var(--shadow);
+}
+.player-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.player-badge{
+  width:34px;height:34px;border-radius:10px;display:grid;place-items:center;
+  background:var(--ink);color:var(--paper);font-weight:800;font-size:15px;flex:none;
+}
+.player-head input{flex:1;min-width:110px}
+.player-head .del{color:var(--err);font-size:18px;padding:6px 10px;font-weight:700}
+.player-head .ptotal{font-size:12px;color:var(--ink-soft);font-weight:700}
+.hgroup{
+  border:1.5px solid var(--line);border-radius:var(--r-md);background:#FFF;
+  padding:8px 10px;margin-bottom:6px;
+}
+.hg-head{display:flex;align-items:center;gap:8px;font-size:12.5px;flex-wrap:wrap}
+.hg-head svg{width:18px;height:18px}
+.hg-cnt{font-weight:800;color:var(--ink)}
+.hg-silent{
+  font-size:10.5px;font-weight:800;color:var(--err);background:#FBE3DE;
+  border-radius:999px;padding:2px 8px;
+}
+.hg-actions{margin-left:auto;display:flex;gap:5px}
+.hg-actions button{
+  min-width:24px;height:24px;border-radius:7px;background:#F1EADA;font-size:13px;font-weight:800;
+  display:grid;place-items:center;color:var(--ink);
+}
+.hg-actions button:active{background:var(--accent);color:#fff}
+.hg-actions button.clear{background:#FDEBE9;color:var(--err)}
+.hinsts{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.hinsts-empty{color:var(--ink-soft);font-size:12px;font-style:italic;padding:2px 0 4px}
+.inst{
+  position:relative;width:44px;height:44px;border:1.5px solid var(--line);border-radius:var(--r-sm);
+  display:grid;place-items:center;background:#FCFAF4;cursor:pointer;
+}
+.inst svg{width:22px;height:22px}
+.inst:active{transform:scale(.94)}
+.inst .rm{
+  position:absolute;top:-6px;right:-6px;width:24px;height:24px;border-radius:50%;
+  background:var(--err);color:#fff;font-size:13px;display:grid;place-items:center;
+}
+.silent-badge{
+  position:absolute;top:-6px;right:-6px;width:19px;height:19px;border-radius:50%;
+  background:#fff;border:1.5px solid var(--err);display:grid;place-items:center;
+  box-shadow:0 1px 3px rgba(0,0,0,.25);
+}
+.silent-badge svg{width:11px;height:11px;display:block}
+.inst.sil{border-color:var(--err)}
+.inst.sil::after{
+  content:"静默";position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);
+  font-size:8.5px;font-weight:800;color:var(--err);white-space:nowrap;
+}
+.inst .rm + .silent-badge{right:9px}
+
+/* ============ 幻乐师：合成台 ============ */
+.forge{
+  background:var(--paper);border:1.5px solid var(--line);border-radius:var(--r-lg);
+  padding:14px;box-shadow:var(--shadow);
+}
+.forge-title{font-size:14px;font-weight:800;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.forge-sub{font-size:12px;color:var(--ink-soft);margin-bottom:12px;line-height:1.6}
+.my-bp{margin-bottom:12px}
+.bp-label{font-size:12px;font-weight:800;color:var(--ink-soft);margin-bottom:8px}
+.bp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(56px,1fr));gap:6px}
+.bp-card2{
+  position:relative;border:1.5px solid var(--line);border-radius:var(--r-md);background:#FFF;
+  display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 2px 5px;
+  font-size:10px;font-weight:700;color:var(--ink);cursor:pointer;
+}
+.bp-card2 svg{width:22px;height:22px}
+.bp-card2:active{transform:scale(.94)}
+.bp-card2 .tname{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.bp-card2[data-t="note_fa"] svg{color:var(--c-fa)}.bp-card2[data-t="note_do"] svg{color:var(--c-do)}
+.bp-card2[data-t="note_re"] svg{color:var(--c-re)}.bp-card2[data-t="note_mi"] svg{color:var(--c-mi)}
+.bp-card2[data-t="note_sol"] svg{color:var(--c-sol)}.bp-card2[data-t="note_la"] svg{color:var(--c-la)}
+.bp-card2[data-t="note_ti"] svg{color:var(--c-ti)}
+.bp-card2[data-t="rhythm_8"] svg{color:var(--c-rhythm)}.bp-card2[data-t="play"] svg{color:var(--c-play)}
+
+/* 合成槽：5 对 × 2 */
+.slot-rows2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pair-row{
+  border:1.5px dashed var(--line);border-radius:var(--r-md);padding:8px;background:#F8F3E8;
+  display:flex;flex-direction:column;gap:6px;
+}
+.pair-row .p-label{font-size:10.5px;font-weight:800;color:var(--ink-soft)}
+.pair-row .p-pair{display:flex;gap:6px}
+.slot{
+  flex:1;aspect-ratio:1/.78;border-radius:var(--r-md);border:1.8px solid var(--line);
+  background:#FFF;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  font-size:10px;color:var(--ink-soft);font-weight:600;cursor:pointer;position:relative;
+}
+.slot svg{width:24px;height:24px}
+.slot.filled{border-style:solid}
+.slot.filled[data-t="note_do"]{border-color:var(--c-do);color:var(--c-do)}
+.slot.filled[data-t="note_re"]{border-color:var(--c-re);color:var(--c-re)}
+.slot.filled[data-t="note_mi"]{border-color:var(--c-mi);color:var(--c-mi)}
+.slot.filled[data-t="note_fa"]{border-color:var(--c-fa);color:var(--c-fa)}
+.slot.filled[data-t="note_sol"]{border-color:var(--c-sol);color:var(--c-sol)}
+.slot.filled[data-t="note_la"]{border-color:var(--c-la);color:var(--c-la)}
+.slot.filled[data-t="note_ti"]{border-color:var(--c-ti);color:var(--c-ti)}
+.slot.filled[data-t="rhythm_8"]{border-color:var(--c-rhythm);color:var(--c-rhythm)}
+.slot.filled[data-t="play"]{border-color:var(--c-play);color:var(--c-play)}
+.slot .rm{
+  position:absolute;top:-7px;right:-7px;width:20px;height:20px;border-radius:50%;
+  background:var(--err);color:#fff;font-size:12px;display:grid;place-items:center;
+}
+
+/* 方向选择 */
+.dir-row{display:flex;gap:10px;margin-top:12px}
+.dir-btn{
+  flex:1;border:2px solid var(--line);border-radius:var(--r-md);padding:12px 8px;
+  background:#FFF;display:flex;flex-direction:column;align-items:center;gap:4px;
+  font-size:13.5px;font-weight:800;color:var(--ink);
+}
+.dir-btn .arrow{font-size:20px;line-height:1}
+.dir-btn .target{font-size:12px;color:var(--ink-soft);font-weight:600}
+.dir-btn.on{border-color:var(--accent);background:var(--accent);color:var(--accent-ink)}
+.dir-btn.on .target{color:rgba(255,246,232,.85)}
+.dir-btn:disabled{opacity:.38}
+.synth-btn{
+  width:100%;margin-top:12px;padding:14px;border-radius:var(--r-md);
+  background:linear-gradient(180deg,#C4630F,#9A3F07);color:var(--accent-ink);
+  font-size:15.5px;font-weight:800;letter-spacing:2px;box-shadow:0 4px 14px rgba(180,83,9,.35);
+}
+.synth-btn:disabled{opacity:.4;box-shadow:none}
+
+/* 随机效果说明 */
+.effect-list{
+  margin-top:12px;border:1.5px solid var(--line);border-radius:var(--r-md);
+  background:#FFF;padding:10px 12px;font-size:12px;color:var(--ink-soft);line-height:1.8;
+}
+.effect-list .el-title{font-weight:800;color:var(--ink);font-size:12.5px;margin-bottom:2px}
+.effect-list b{color:var(--ink)}
+
+/* 产出区 */
+.output-bar{
+  margin-top:12px;border-top:1.5px dashed var(--line);padding-top:10px;
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+}
+.output-bar .ob-label{font-size:12px;font-weight:800;color:var(--ink-soft)}
+.out-card{
+  display:flex;align-items:center;gap:6px;background:#FFF;border:1.8px solid var(--line);
+  border-radius:var(--r-md);padding:6px 10px;font-size:12.5px;font-weight:800;
+}
+.out-card svg{width:18px;height:18px}
+
+/* 历史 */
+.history-list{margin-top:6px;display:flex;flex-direction:column;gap:6px}
+.h-item{
+  background:var(--paper);border:1.5px solid var(--line);border-radius:var(--r-md);
+  padding:9px 12px;font-size:12.5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+}
+.h-item .t{color:var(--ink-soft);font-size:11px;margin-left:auto}
+.h-item svg{width:16px;height:16px}
+.h-item .eff{font-size:11px;font-weight:800}
+.h-item .eff.e-destroy{color:var(--err);background:#FBE3DE;border-radius:999px;padding:2px 8px}
+.eff-dot{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:6px;background:var(--accent);color:var(--accent-ink);font-size:11px;font-weight:800;margin-right:2px;vertical-align:-2px}
+.h-item .eff.e-normal{color:var(--ink-soft)}
+
+/* 弹窗 */
+.modal-mask{position:fixed;inset:0;background:rgba(43,38,32,.45);z-index:400;display:grid;place-items:center;padding:24px}
+.modal{
+  background:var(--paper);border-radius:var(--r-lg);width:100%;max-width:420px;padding:18px;
+  box-shadow:0 10px 40px rgba(0,0,0,.25);max-height:84dvh;overflow:auto;
+}
+.modal h3{font-size:16px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.modal .row{display:flex;gap:8px;margin-top:12px}
+.modal .btn{flex:1}
+.pick-player-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
+.pick-player{
+  border:1.5px solid var(--line);border-radius:var(--r-md);background:#FFF;padding:10px;
+  text-align:left;font-size:13px;font-weight:700;
+}
+.pick-player .sub{font-size:11px;color:var(--ink-soft);font-weight:600;margin-top:3px}
+.pick-player:active{transform:scale(.97)}
+
+/* toast */
+#toast{
+  position:fixed;left:50%;bottom:calc(30px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(10px);
+  background:rgba(43,38,32,.92);color:#fff;padding:10px 18px;border-radius:999px;font-size:13.5px;font-weight:600;
+  opacity:0;transition:all .25s ease;z-index:300;pointer-events:none;max-width:88vw;text-align:center;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* 合成动画 */
+#flashLayer{position:fixed;inset:0;pointer-events:none;z-index:250}
+.flash-ring{
+  position:fixed;left:50%;top:42%;width:70px;height:70px;margin:-35px 0 0 -35px;
+  border-radius:50%;border:5px solid var(--accent);opacity:0;
+}
+.flash-ring.go{animation:ring .65s ease-out forwards}
+@keyframes ring{0%{transform:scale(.4);opacity:.9}100%{transform:scale(2.6);opacity:0}}
+
+.ios-mute-tip{position:fixed;right:10px;bottom:calc(40px + env(safe-area-inset-bottom));background:rgba(43,38,32,.85);color:#fff;font-size:11px;border-radius:8px;padding:6px 9px;display:flex;align-items:center;gap:5px;z-index:150;line-height:1.35;max-width:180px}
+
+@media(max-width:430px){
+  .slot-rows2{grid-template-columns:1fr;gap:8px}
+  .ht-tip{min-width:100%}
+}
+@media(max-width:640px){
+  .icon-btn{width:44px;height:44px}
+  .pill-btn{padding:11px 14px;font-size:14px;min-height:44px}
+  .host-toolbar .btn{padding:12px 16px;font-size:14px;min-height:44px}
+  .hg-head button{min-width:44px;min-height:44px;font-size:15px}
+  .slot{font-size:11px;min-height:64px}
+  .slot svg{width:28px;height:28px}
+  .pair-row .p-label{font-size:12px}
+  .ht-tip,.bp-label,.ob-label,.forge-sub,.empty,.ptotal{font-size:14px}
+  .dir-btn .target{font-size:13px}
+  .effect-list .el-title{font-size:13px}
+  .player-head .ptotal{font-size:13px}
+  .player-head .del{min-width:44px;min-height:44px;display:grid;place-items:center}
+  .pair-row .p-label{font-size:13px}
+  .h-item .eff{font-size:12px}
+  .h-item .t{font-size:12px}
+}
+@media(min-width:700px){
+  main{max-width:900px}
+}
+@media(prefers-reduced-motion:reduce){
+  *{transition:none !important;animation:none !important}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#B45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+    拯救失乐园 · 合成台
+  </div>
+  <select id="modeSelect" class="mode-select" aria-label="切换模式">
+    <option value="host">主持人</option>
+    <option value="player">幻乐师</option>
+  </select>
+  <button class="icon-btn" id="muteBtn" title="声音开关" aria-label="声音开关" role="switch" aria-checked="false">
+    <svg id="muteOnIco" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M22 9l-6 6M16 9l6 6"/></svg>
+    <svg id="muteOffIco" class="hidden" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9.5 9.5 0 0 1 0 13"/></svg>
+  </button>
+</header>
+
+<main>
+  <!-- 音阶阶梯 -->
+  <div class="scale-strip" id="scaleStrip"></div>
+
+  <!-- ============ 主持人视图：卡片管理 ============ -->
+  <section id="hostView">
+    <div class="section-title">幻乐师卡片管理
+      <span class="spacer"></span>
+      <button class="pill-btn" id="addPlayerBtn">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        添加幻乐师
+      </button>
+      <button class="pill-btn" id="importHuntBtn">从寻宝同步</button>
+    </div>
+    <div class="host-toolbar">
+      <button class="btn" id="muteAllBtn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M22 9l-6 6M16 9l6 6"/></svg>
+        一键静默标记
+      </button>
+      <div class="ht-tip">对每位幻乐师背包中的「八分音符」和「音符 Fa」按 <b>10%</b> 概率打上静默标记（可多次执行）。静默卡上会带喇叭＋红色禁止角标，<b>只有主持人能看到</b>，幻乐师端完全看不出。</div>
+    </div>
+    <div id="playersWrap"></div>
+  </section>
+
+  <!-- ============ 幻乐师视图：合成台 ============ -->
+  <section id="playerView" class="hidden">
+    <div class="section-title">我的合成台
+      <span class="spacer"></span>
+      <select id="curPlayerSelect" class="mini-select"></select>
+    </div>
+    <div class="forge">
+      <div class="forge-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        自己的卡片 · 自己合成
+      </div>
+      <div class="forge-sub">从自己背包点选卡片放入合成台，<b>一次最多 10 张</b>（两两一对 = 5 次合成），放入的卡片必须是<b>同一种音符卡</b>；选择向上（音更高）或向下（音更低），每次合成还会触发<b>随机效果</b>。</div>
+      <div class="my-bp">
+        <div class="bp-label">我的背包（点击卡片放入合成台）</div>
+        <div class="bp-grid" id="myBpGrid"></div>
+      </div>
+      <div class="slot-rows2" id="forgeSlots"></div>
+      <div class="dir-row">
+        <button class="dir-btn" id="dirUp">
+          <span class="arrow">↑</span>向上合成
+          <span class="target" id="dirUpTarget">目标：—</span>
+        </button>
+        <button class="dir-btn" id="dirDown">
+          <span class="arrow">↓</span>向下合成
+          <span class="target" id="dirDownTarget">目标：—</span>
+        </button>
+      </div>
+      <button class="synth-btn" id="synthBtn" disabled>合 成</button>
+      <div class="effect-list">
+        <div class="el-title">合成随机效果（每次合成独立触发）</div>
+        <div><span class="eff-dot">静</span> <b>全体静默</b> 10% · 所有合成出的卡片都变成静默卡</div>
+        <div><span class="eff-dot">净</span> <b>全体净化</b> 10% · 所有合成出的卡片去除静默效果</div>
+        <div>⤴ <b>越级升级</b> 10% · 此次合成出的卡片全部再多升一级</div>
+        <div><span class="eff-dot">熔</span> <b>熔炉毁坏</b> 5% · 合成失败，销毁所有放入的卡片</div>
+        <div><span class="eff-dot">倍</span> <b>高倍掉落</b> 20% · 合成出的卡片总数多 1 张</div>
+        <div>规则：放入的卡片中只要有一张静默卡，合成出的卡片<b>一定也是静默卡</b>（除非触发「全体净化」）。</div>
+      </div>
+      <div class="output-bar" id="outputBar"></div>
+    </div>
+
+    <div class="section-title">合成历史</div>
+    <div class="history-list" id="historyList"></div>
+  </section>
+</main>
+
+<div id="flashLayer"></div>
+<div id="toast"></div>
+<div class="ios-mute-tip hidden" id="iosMuteTip">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+  <span>iPhone 请关闭侧边静音键，否则听不到声音</span>
+</div>
+
+<div class="modal-mask hidden" id="modalMask">
+  <div class="modal" id="modalBox"></div>
+</div>
+
+<script>
+/* =========================================================
+   拯救失乐园 · 音乐合成台（主持人管理 + 幻乐师自合成）
+   主持人：录入/增删每位幻乐师的卡片、一键静默标记（主持人可见）
+   幻乐师：选自己的卡，一次最多 10 张（2 张合 1 张）自合成，
+           随机效果：全体静默10% / 全体净化10% / 越级10% / 熔炉毁坏5% / 高倍掉落20%
+   静默规则：♪ 与 Fa 有 10% 概率静默；输入有静默 → 产出必静默（净化除外）；
+            静默标记只有主持人端可见
+   ========================================================= */
+"use strict";
+const LS_SYNTH="ms_synth_v1", LS_HUNT_PLAYERS="mh_players_v1", LS_PREF="ms_pref_v1";
+const $=s=>document.querySelector(s);
+
+/* ---------- 卡片定义 ---------- */
+const SCALE=["Do","Re","Mi","Fa","Sol","La","Ti"];
+const NOTE_HEX={do:"#E2574C",re:"#E8893C",mi:"#DFB63C",fa:"#6FAE4E",sol:"#3FA9A0",la:"#4E7FC4",ti:"#8A6BBE"};
+const CARD_DEFS={};
+SCALE.forEach((n,i)=>{
+  const k="note_"+n.toLowerCase();
+  CARD_DEFS[k]={t:k,name:"音符 "+n,kind:"note",idx:i,short:n,color:NOTE_HEX[n.toLowerCase()],hex:NOTE_HEX[n.toLowerCase()]};
+});
+CARD_DEFS.note_fa={t:"note_fa",name:"音符 Fa",kind:"note",idx:3,short:"Fa",color:"#6FAE4E",hex:"#6FAE4E",basic:true};
+CARD_DEFS.rhythm_8={t:"rhythm_8",name:"八分音符",kind:"rhythm",short:"♪",color:"#3D6B99",hex:"#3D6B99",basic:true};
+CARD_DEFS.play={t:"play",name:"播放键",kind:"function",short:"▶",color:"#C98A2D",hex:"#C98A2D",basic:true};
+const NOTE_ORDER=["note_do","note_re","note_mi","note_sol","note_la","note_ti"];
+const DISPLAY_ORDER=["note_do","note_re","note_mi","note_fa","note_sol","note_la","note_ti","rhythm_8","play"];
+const FREQ={do:261.63,re:293.66,mi:329.63,fa:349.23,sol:392.00,la:440.00,ti:493.88};
+function cardIcon(t,size=20){
+  const s=`width:${size}px;height:${size}px`;
+  if(t.startsWith("note_")){
+    return `<svg style="${s}" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="17" r="3.2"/><path d="M11.2 17V5.4L21 3.4v8.6a3.2 3.2 0 1 1-2-2.95V7.1l-5.8 1.1V17z"/></svg>`;
+  }
+  if(t==="rhythm_8")return `<svg style="${s}" viewBox="0 0 24 24" fill="currentColor"><path d="M9 18.5a2.5 2.5 0 1 1-2-2.45V6.2l13-2.5v9.55a2.5 2.5 0 1 1-2-2.45V8.1l-9 1.73v8.67z"/></svg>`;
+  return `<svg style="${s}" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v13.72a1 1 0 0 0 1.5.86l11-6.86a1 1 0 0 0 0-1.72l-11-6.86a1 1 0 0 0-1.5.86z"/></svg>`;
+}
+function silentBadge(){
+  return `<span class="silent-badge" title="静默卡片"><svg viewBox="0 0 24 24" fill="none"><path d="M11 5 6 9H2v6h4l5 4V5z" fill="#2B2620"/><path d="M21 9l-6 6M15 9l6 6" stroke="#C0392B" stroke-width="2.8" stroke-linecap="round"/></svg></span>`;
+}
+function shortName(t){
+  const d=CARD_DEFS[t];
+  if(d.short==="Fa")return "Fa";
+  if(t==="rhythm_8")return "♪";
+  if(t==="play")return "播放";
+  return d.short;
+}
+
+/* ---------- 状态（卡为实例数组，静默标记挂在单卡上） ---------- */
+let state=load(LS_SYNTH,null);
+function toInstances(countObj){
+  const arr=[];
+  DISPLAY_ORDER.forEach(t=>{for(let n=0;n<(countObj[t]||0);n++)arr.push({i:uid(),type:t,silent:false})});
+  return arr;
+}
+function migrate(s){
+  if(!s||typeof s!=="object")s={};
+  if(!Array.isArray(s.players)||!s.players.length)s.players=[{id:"p1",name:"幻乐师A",cards:[]}];
+  s.players.forEach(p=>{
+    if(!Array.isArray(p.cards)){
+      p.cards=toInstances((p.cards&&typeof p.cards==="object")?p.cards:{});
+    }
+    p.cards.forEach(c=>{if(c.silent===undefined)c.silent=false});
+  });
+  if(!Array.isArray(s.slots))s.slots=new Array(10).fill(null);
+  s.slots=s.slots.slice(0,10);while(s.slots.length<10)s.slots.push(null);
+  if(s.dir!=="down")s.dir="up";
+  if(!Array.isArray(s.history))s.history=[];
+  if(!s.cur||!s.players.find(p=>p.id===s.cur))s.cur=s.players[0].id;
+  return s;
+}
+state=migrate(state);
+saveState();
+function saveState(){save(LS_SYNTH,state)}
+function load(k,d){try{const v=JSON.parse(localStorage.getItem(k));return v??d}catch(e){return d}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){toast("本地存储空间不足")}}
+function uid(){return Math.random().toString(36).slice(2,8)}
+function curPlayer(){return state.players.find(p=>p.id===state.cur)||state.players[0]}
+function findCard(pid,cid){const p=state.players.find(p=>p.id===pid);return p?p.cards.find(c=>c.i===cid):null}
+
+/* ---------- 音频 ---------- */
+let AC=null,muted=load(LS_PREF,{}).muted||false;
+function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){return null}}if(AC&&AC.state==="suspended")AC.resume();return AC}
+function tone(freq,dur=0.3,type="sine",vol=0.32,when=0){
+  if(muted)return;const c=ac();if(!c)return;
+  const o=c.createOscillator(),g=c.createGain(),t=c.currentTime+when;
+  o.type=type;o.frequency.value=freq;
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(vol,t+0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+dur+0.05);
+}
+function playCard(t){
+  if(t.startsWith("note_"))tone(FREQ[CARD_DEFS[t].short.toLowerCase()],0.45,"sine",0.35);
+  else if(t==="rhythm_8"){tone(1200,0.05,"square",0.18,0);tone(1200,0.05,"square",0.18,0.24)}
+  else{
+    const seq=[261.63,293.66,329.63,349.23,392,440,493.88,523.25];
+    seq.forEach((f,i)=>tone(f,0.28,"sine",0.3,i*0.15));
+  }
+}
+function playSynth(fromT,toT){
+  const f1=FREQ[CARD_DEFS[fromT].short.toLowerCase()],f2=FREQ[CARD_DEFS[toT].short.toLowerCase()];
+  tone(f1,0.4,"triangle",0.34,0);tone(f2,0.5,"triangle",0.34,0.28);
+  tone(f1,0.3,"sine",0.2,0.55);tone(f2,0.6,"sine",0.2,0.75);
+}
+function playFail(){tone(160,0.3,"sawtooth",0.2);tone(120,0.4,"sawtooth",0.18,0.15)}
+function flashRing(){
+  const el=document.createElement("div");el.className="flash-ring";
+  $("#flashLayer").appendChild(el);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add("go")));
+  setTimeout(()=>el.remove(),700);
+}
+function setMute(m){
+  muted=m;const p=load(LS_PREF,{});p.muted=m;save(LS_PREF,p);
+  $("#muteOnIco").classList.toggle("hidden",!m);
+  $("#muteOffIco").classList.toggle("hidden",m);
+  $("#muteBtn").setAttribute("aria-checked",String(m));
+}
+$("#muteBtn").addEventListener("click",()=>setMute(!muted));
+setMute(muted);
+let toastTimer=null;
+function toast(msg){const el=$("#toast");el.textContent=msg;el.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove("show"),2000)}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function fmtDate(){const d=new Date();return `${d.getMonth()+1}/${d.getDate()}`}
+
+/* =========================================================
+   主持人视图：幻乐师卡片管理
+   ========================================================= */
+function renderPlayers(){
+  const wrap=$("#playersWrap");
+  wrap.innerHTML=state.players.map(p=>{
+    const byType={};
+    p.cards.forEach(c=>{(byType[c.type]=byType[c.type]||[]).push(c)});
+    const groups=DISPLAY_ORDER.map(t=>{
+      const cards=byType[t]||[];
+      const silentN=cards.filter(c=>c.silent).length;
+      const insts=cards.map(c=>{
+        return `<span class="inst ${c.silent?"sil":""}" data-ci="${c.i}" data-pid="${p.id}">
+          ${cardIcon(c.type,22)}
+          <span class="rm" data-rm="1">×</span>
+          ${c.silent?silentBadge():""}
+        </span>`;
+      }).join("");
+      const body=cards.length?`<div class="hinsts">${insts}</div>`:`<div class="hinsts hinsts-empty">还没有这类卡片，点「＋」添加</div>`;
+      return `<div class="hgroup">
+        <div class="hg-head">
+          ${cardIcon(t)} <b>${CARD_DEFS[t].name}</b>
+          <span class="hg-cnt">×${cards.length}</span>
+          ${silentN?`<span class="hg-silent">静默 ${silentN} 张</span>`:""}
+          <span class="hg-actions">
+            <button data-hact="minus" data-pid="${p.id}" data-t="${t}" ${cards.length?"":"disabled style='opacity:.3'"}>−</button>
+            <button data-hact="plus" data-pid="${p.id}" data-t="${t}">＋</button>
+            <button class="clear" data-hact="clear" data-pid="${p.id}" data-t="${t}" ${cards.length?"":"disabled style='opacity:.3'"}>清空</button>
+          </span>
+        </div>
+        ${body}
+      </div>`;
+    }).join("");
+    const total=p.cards.length;
+    return `<div class="player-card">
+      <div class="player-head">
+        <span class="player-badge">${esc((p.name||"?").slice(0,1))}</span>
+        <input data-pname="${p.id}" value="${esc(p.name)}" maxlength="10">
+        <span class="ptotal">共 ${total} 张</span>
+        <button class="del" data-pdel="${p.id}" ${state.players.length<=1?"disabled style='opacity:.25'":""}>×</button>
+      </div>
+      ${groups}
+    </div>`;
+  }).join("")||`<div class="empty">还没有幻乐师，点「添加幻乐师」创建。</div>`;
+
+  wrap.querySelectorAll("input[data-pname]").forEach(inp=>inp.addEventListener("input",()=>{
+    const p=state.players.find(p=>p.id===inp.dataset.pname);
+    if(p){p.name=inp.value.trim()||p.name;saveState()}
+  }));
+  wrap.querySelectorAll("[data-pdel]").forEach(b=>b.addEventListener("click",()=>{
+    const id=b.dataset.pdel;
+    const p=state.players.find(p=>p.id===id);
+    if(!p)return;
+    if(p.cards.length>0&&!confirm(`删除「${p.name}」？背包里的 ${p.cards.length} 张卡会一并清空。`))return;
+    state.players=state.players.filter(x=>x.id!==id);
+    if(state.cur===id)state.cur=(state.players[0]||{id:null}).id;
+    state.slots=new Array(10).fill(null);
+    saveState();renderAll();toast(`已删除「${p.name}」`);
+  }));
+  wrap.querySelectorAll("[data-hact]").forEach(b=>b.addEventListener("click",ev=>{
+    ev.stopPropagation();
+    const pid=b.dataset.pid,t=b.dataset.t,act=b.dataset.hact;
+    const p=state.players.find(p=>p.id===pid);if(!p)return;
+    if(act==="plus"){p.cards.push({i:uid(),type:t,silent:false});playCard(t)}
+    else if(act==="minus"){
+      const idx=p.cards.map(c=>c.type).lastIndexOf(t);
+      if(idx>=0){p.cards.splice(idx,1)}
+    }else if(act==="clear"){
+      if(!confirm(`清空「${p.name}」的所有 ${CARD_DEFS[t].name}（${p.cards.filter(c=>c.type===t).length} 张）？`))return;
+      p.cards=p.cards.filter(c=>c.type!==t);
+    }
+    saveState();renderAll();
+  }));
+  wrap.querySelectorAll("[data-ci]").forEach(el=>el.addEventListener("click",ev=>{
+    if(ev.target.closest("[data-rm]")){
+      const pid=el.dataset.pid,cid=el.dataset.ci;
+      const p=state.players.find(p=>p.id===pid);if(!p)return;
+      const idx=p.cards.findIndex(c=>c.i===cid);
+      if(idx>=0){p.cards.splice(idx,1);saveState();renderAll();toast("已删除一张卡片")}
+      return;
+    }
+    const c=findCard(el.dataset.pid,el.dataset.ci);
+    if(c)playCard(c.type);
+  }));
+}
+$("#addPlayerBtn").addEventListener("click",()=>{
+  const n="幻乐师"+String.fromCharCode(65+state.players.length);
+  state.players.push({id:"p_"+uid(),name:n,cards:[]});
+  saveState();renderAll();toast(`已添加 ${n}`);
+});
+$("#muteAllBtn").addEventListener("click",()=>{
+  if(!confirm("对每位幻乐师背包中的「八分音符」和「音符 Fa」按 10% 概率打上静默标记？\n（已静默的不会重复打标；静默标记只有主持人端可见）"))return;
+  let n=0;
+  state.players.forEach(p=>p.cards.forEach(c=>{
+    if((c.type==="rhythm_8"||c.type==="note_fa")&&!c.silent&&Math.random()<0.1){c.silent=true;n++}
+  }));
+  saveState();renderAll();
+  toast(n?`已标记 ${n} 张静默卡片`:"这次没有卡被标记（10% 概率，可再执行一次）");
+});
+
+/* ---------- 从寻宝程序同步 ---------- */
+$("#importHuntBtn").addEventListener("click",()=>{
+  const hunt=load(LS_HUNT_PLAYERS,{});
+  const byName={};
+  Object.values(hunt).filter(v=>v&&(v.cards||v.backpack)).forEach(v=>{
+    const n=v.playerName||"幻乐师";
+    if(!byName[n]||(v.updatedAt||0)>(byName[n].updatedAt||0))byName[n]=v;
+  });
+  const entries=Object.values(byName);
+  if(!entries.length){toast("本机没有找到寻宝程序的背包数据");return}
+  const box=$("#modalBox");
+  box.innerHTML=`<h3>从「音乐寻宝」同步</h3>
+    <div style="font-size:13px;color:var(--ink-soft);margin-bottom:10px">找到 ${entries.length} 份寻宝背包，选择合并到哪位幻乐师。</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${entries.map((e,i)=>`<button class="pick-player" data-merge="${i}">${esc(e.playerName||("幻乐师"+(i+1)))}<span class="sub">${(e.cards||[]).length?`卡 ${e.cards.length} 张`:`Fa×${e.backpack.note_fa||0} · ♪×${e.backpack.rhythm_8||0} · ▶×${e.backpack.play||0}`}</span></button>`).join("")}
+    </div>
+    <div class="row"><button class="btn ghost" id="hmCancel">取消</button></div>`;
+  openModal();
+  box.querySelectorAll("[data-merge]").forEach(b=>b.addEventListener("click",()=>mergeIntoPlayer(entries[+b.dataset.merge])));
+  $("#hmCancel").onclick=closeModal;
+});
+function mergeIntoPlayer(e){
+  const box=$("#modalBox");
+  const list=state.players.map(p=>`<button class="pick-player" data-mp="${p.id}">${esc(p.name)}<span class="sub">合并进去</span></button>`).join("");
+  box.innerHTML=`<h3>${esc(e.playerName||"幻乐师")} 的背包合并到？</h3>
+    <div class="pick-player-grid">${list}
+      <button class="pick-player" data-mp="new"><b>＋ 新建幻乐师</b><span class="sub">以 ${esc(e.playerName||"幻乐师")} 为名新建</span></button>
+    </div>
+    <div class="row"><button class="btn ghost" id="mmCancel2">取消</button></div>`;
+  box.querySelectorAll("[data-mp]").forEach(b=>b.addEventListener("click",()=>{
+    let p;
+    if(b.dataset.mp==="new"){
+      p={id:"p_"+uid(),name:e.playerName||("幻乐师"+state.players.length),cards:[]};
+      state.players.push(p);
+    }else{
+      p=state.players.find(x=>x.id===b.dataset.mp);
+    }
+    if(!p)return;
+    if(Array.isArray(e.cards)){
+      e.cards.forEach(c=>p.cards.push({i:uid(),type:c.type,silent:!!c.silent}));
+    }else{
+      ["note_fa","rhythm_8","play"].forEach(t=>{for(let n=0;n<(e.backpack[t]||0);n++)p.cards.push({i:uid(),type:t,silent:false})});
+    }
+    saveState();renderAll();closeModal();
+    toast(`已合并到「${p.name}」`);
+  }));
+  $("#mmCancel2").onclick=closeModal;
+}
+
+/* =========================================================
+   幻乐师视图：自合成
+   ========================================================= */
+function renderCurSelect(){
+  const sel=$("#curPlayerSelect");
+  sel.innerHTML=state.players.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join("");
+  sel.value=state.cur||"";
+}
+function renderMyBp(){
+  const p=curPlayer();if(!p){$("#myBpGrid").innerHTML=`<div class="empty">还没有幻乐师，请主持人先添加。</div>`;return}
+  const grid=$("#myBpGrid");
+  if(!p.cards.length){grid.innerHTML=`<div class="empty">背包为空，请主持人录入卡片或从寻宝同步。</div>`;return}
+  /* 幻乐师端不显示静默标记 */
+  grid.innerHTML=p.cards.map(c=>{
+    const d=CARD_DEFS[c.type];
+    return `<div class="bp-card2" data-ci="${c.i}" style="color:${d.hex}">
+      ${cardIcon(c.type,22)}
+      <span class="tname">${shortName(c.type)}</span>
+    </div>`;
+  }).join("");
+  grid.querySelectorAll(".bp-card2").forEach(el=>el.addEventListener("click",()=>{
+    const p=curPlayer();if(!p)return;
+    const idx=p.cards.findIndex(c=>c.i===el.dataset.ci);
+    if(idx<0)return;
+    const free=state.slots.findIndex(s=>!s);
+    if(free<0){toast("合成台已放满 10 张，点槽位可取出") ;return}
+    const c=p.cards[idx];
+    state.slots[free]={i:c.i,type:c.type,silent:!!c.silent};
+    p.cards.splice(idx,1);
+    saveState();renderAll();
+  }));
+}
+function renderSlots(){
+  const wrap=$("#forgeSlots");
+  const pairs=[[0,1],[2,3],[4,5],[6,7],[8,9]];
+  wrap.innerHTML=pairs.map((pr,pi)=>{
+    const cells=pr.map(k=>{
+      const v=state.slots[k];
+      if(v){
+        return `<div class="slot filled" data-t="${v.type}" data-k="${k}">${cardIcon(v.type,24)}<span class="rm">×</span></div>`;
+      }
+      return `<div class="slot" data-k="${k}"><span>第 ${pi+1} 对</span></div>`;
+    }).join("");
+    return `<div class="pair-row"><div class="p-label">第 ${pi+1} 对（2 张 → 1 张）</div><div class="p-pair">${cells}</div></div>`;
+  }).join("");
+  wrap.querySelectorAll(".slot").forEach(el=>el.addEventListener("click",()=>{
+    const k=+el.dataset.k;
+    const v=state.slots[k];
+    if(!v)return;
+    const p=curPlayer();if(!p)return;
+    p.cards.push({i:v.i,type:v.type,silent:!!v.silent});
+    state.slots[k]=null;
+    saveState();renderAll();
+  }));
+}
+function renderDir(){
+  const filled=state.slots.filter(s=>s);
+  const type=filled.length&&[...new Set(filled.map(s=>s.type))].length===1?filled[0].type:null;
+  const idx=type&&CARD_DEFS[type].kind==="note"?CARD_DEFS[type].idx:null;
+  $("#dirUpTarget").textContent=idx!==null&&idx<6?`目标：${SCALE[idx+1]}`:"目标：—";
+  $("#dirDownTarget").textContent=idx!==null&&idx>0?`目标：${SCALE[idx-1]}`:"目标：—";
+  $("#dirUp").classList.toggle("on",state.dir==="up");
+  $("#dirDown").classList.toggle("on",state.dir==="down");
+  $("#dirUp").disabled=idx===null||idx>=6;
+  $("#dirDown").disabled=idx===null||idx<=0;
+}
+function renderScaleStrip(){
+  const filled=state.slots.filter(s=>s);
+  const type=filled.length&&[...new Set(filled.map(s=>s.type))].length===1?filled[0].type:null;
+  const strip=$("#scaleStrip");
+  strip.innerHTML=SCALE.map((n,i)=>{
+    const k="note_"+n.toLowerCase();
+    const c=NOTE_HEX[n.toLowerCase()];
+    const active=type&&type===k;
+    return `<div class="scale-step ${active?"active":""}" data-t="${k}" style="border-color:${c};color:${c}">
+      ${n}<small>${i===3?"基础卡":"升级卡"}</small></div>`;
+  }).join("");
+}
+function renderOutputBar(){
+  const bar=$("#outputBar");
+  const o=state.lastOutput;
+  if(!o){bar.innerHTML=`<span class="ob-label">合成产出：暂无（合成后在这里查看）</span>`;return}
+  if(o.destroy){
+    bar.innerHTML=`<span class="ob-label">合成产出：</span><span class="out-card" style="border-color:var(--err);color:var(--err)">熔炉毁坏，放入的卡片全部被销毁</span>`;
+    return;
+  }
+  const cardsHtml=Array.from({length:Math.min(o.outN,8)},()=>`<span class="out-card" style="color:${CARD_DEFS[o.type].hex};border-color:${CARD_DEFS[o.type].hex}">${cardIcon(o.type,18)} ${CARD_DEFS[o.type].short}</span>`).join("");
+  const eff=o.effects&&o.effects.length?`<span style="font-size:11.5px;font-weight:800;color:var(--accent)">${o.effects.map(e=>e.label).join(" · ")}</span>`:"";
+  bar.innerHTML=`<span class="ob-label">本次产出（已入背包）：</span>${cardsHtml}${o.outN>8?`<span class="out-card">…共 ${o.outN} 张</span>`:""}${eff}`;
+}
+function renderSynthState(){
+  const filled=state.slots.filter(s=>s);
+  const n=filled.length;
+  const types=[...new Set(filled.map(s=>s.type))];
+  const oneType=types.length===1;
+  const isNote=oneType&&CARD_DEFS[types[0]].kind==="note";
+  const idx=isNote?CARD_DEFS[types[0]].idx:null;
+  const step=state.dir==="up"?1:-1;
+  const inBounds=idx!==null&&idx+step>=0&&idx+step<SCALE.length;
+  $("#synthBtn").disabled=!(n>=2&&n%2===0&&oneType&&isNote&&inBounds);
+}
+function renderHistory(){
+  const list=$("#historyList");
+  if(!state.history.length){list.innerHTML=`<div style="font-size:12.5px;color:var(--ink-soft);padding:4px 2px">还没有合成记录。完成一次合成后会自动记录。</div>`;return}
+  list.innerHTML=state.history.slice().reverse().map(h=>{
+    const t=new Date(h.at);
+    const hm=String(t.getHours()).padStart(2,"0")+":"+String(t.getMinutes()).padStart(2,"0");
+    const eff=h.destroy
+      ?`<span class="eff e-destroy">熔炉毁坏</span>`
+      :(h.effects&&h.effects.length?`<span class="eff" style="color:var(--accent)">${h.effects.map(e=>e.label).join(" · ")}</span>`:`<span class="eff e-normal">普通合成</span>`);
+    return `<div class="h-item">
+      ${cardIcon(h.from,16)} <b>${h.fromName}</b> ×${h.n}
+      <span style="color:var(--ink-soft)">${h.dir==="up"?"↑":"↓"}</span>
+      ${cardIcon(h.to,16)} <b>${h.toName}</b> ×${h.outN}
+      <span style="color:var(--ink-soft)">· ${esc(h.pName)}</span>
+      ${eff}
+      <span class="t">${h.date} ${hm}</span>
+    </div>`;
+  }).join("");
+}
+
+/* 合成 */
+$("#dirUp").addEventListener("click",()=>{state.dir="up";saveState();renderAll()});
+$("#dirDown").addEventListener("click",()=>{state.dir="down";saveState();renderAll()});
+$("#synthBtn").addEventListener("click",synth);
+function synth(){
+  const p=curPlayer();if(!p){toast("先添加幻乐师");return}
+  const filled=state.slots.filter(s=>s);
+  const n=filled.length;
+  if(n<2||n%2){toast("需要偶数张卡片（2 / 4 / 6 / 8 / 10 张）");return}
+  const types=[...new Set(filled.map(s=>s.type))];
+  if(types.length!==1){toast("所有放入的卡片必须是同一种");return}
+  const from=types[0];
+  if(CARD_DEFS[from].kind!=="note"){toast("只有音符卡能合成（♪ 与播放键不可合成）");return}
+  const idx=CARD_DEFS[from].idx;
+  const step=state.dir==="up"?1:-1;
+  if(idx+step<0||idx+step>=SCALE.length){toast("该方向已到音阶边界，无法合成");playFail();renderDir();return}
+
+  /* 随机效果（独立判定） */
+  const rDestroy=Math.random()<0.05;
+  const rPurify=Math.random()<0.10;
+  const rSilent=Math.random()<0.10;
+  const rJump=Math.random()<0.10;
+  const rDrop=Math.random()<0.20;
+  const pairN=n/2;
+  const inputSilent=filled.some(s=>s.silent);
+
+  if(rDestroy){
+    state.slots=new Array(10).fill(null);
+    state.lastOutput={destroy:true};
+    state.history.push({at:Date.now(),pName:p.name,from,to:from,fromName:CARD_DEFS[from].short,toName:CARD_DEFS[from].short,dir:state.dir,n,outN:0,destroy:true,date:fmtDate()});
+    trimHistory();
+    saveState();renderAll();
+    playFail();flashRing();
+    toast(`熔炉毁坏！放入的 ${n} 张 ${CARD_DEFS[from].name} 全部被销毁`);
+    return;
+  }
+
+  const effects=[];
+  if(rPurify)effects.push({label:"全体净化"});
+  if(rSilent)effects.push({label:"全体静默"});
+  if(rJump)effects.push({label:"⤴ 越级升级"});
+  if(rDrop)effects.push({label:"高倍掉落"});
+  const toIdx=Math.max(0,Math.min(SCALE.length-1,idx+(rJump?2:1)*step));
+  const toT="note_"+SCALE[toIdx].toLowerCase();
+  let outN=pairN+(rDrop?1:0);
+  const silent=rPurify?false:(inputSilent||rSilent);
+
+  const outCards=Array.from({length:outN},()=>({i:uid(),type:toT,silent}));
+  p.cards=p.cards.concat(outCards);
+  state.slots=new Array(10).fill(null);
+  state.lastOutput={type:toT,outN,silent,effects:effects.map(e=>e.label)};
+  state.history.push({
+    at:Date.now(),pName:p.name,from,to:toT,fromName:CARD_DEFS[from].short,toName:CARD_DEFS[toT].short,
+    dir:state.dir,n,outN,effects:effects.map(e=>e.label),date:fmtDate()
+  });
+  trimHistory();
+  saveState();renderAll();
+  playSynth(from,toT);flashRing();
+  const effTxt=effects.length?effects.map(e=>e.label).join("，")+"！":"";
+  toast(`${n} 张 ${CARD_DEFS[from].short} ${state.dir==="up"?"↑":"↓"} → ${outN} 张 ${CARD_DEFS[toT].short}${effTxt}`);
+}
+function trimHistory(){if(state.history.length>60)state.history=state.history.slice(-60)}
+
+/* 模式切换 */
+function switchMode(m){
+  const isPlayer=m==="player";
+  $("#modeSelect").value=m;
+  $("#hostView").classList.toggle("hidden",isPlayer);
+  $("#playerView").classList.toggle("hidden",!isPlayer);
+  if(isIOS)$("#iosMuteTip").classList.toggle("hidden",isPlayer);
+  if(isPlayer)renderAll();
+}
+$("#modeSelect").addEventListener("change",ev=>switchMode(ev.target.value));
+$("#curPlayerSelect").addEventListener("change",ev=>{
+  const old=curPlayer();
+  const filled=state.slots.filter(s=>s);
+  if(old&&filled.length){
+    filled.forEach(v=>old.cards.push({i:v.i,type:v.type,silent:!!v.silent}));
+  }
+  state.slots=new Array(10).fill(null);
+  state.cur=ev.target.value;
+  saveState();renderAll();
+  if(filled.length)toast(`合成台里的 ${filled.length} 张卡已放回「${old.name}」背包`);
+});
+
+/* ---------- 弹窗 ---------- */
+function openModal(){$("#modalMask").classList.remove("hidden")}
+function closeModal(){$("#modalMask").classList.add("hidden")}
+$("#modalMask").addEventListener("click",ev=>{if(ev.target.id==="modalMask")closeModal()});
+
+const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+if(isIOS)$("#iosMuteTip").classList.remove("hidden");
+
+/* ---------- 渲染 ---------- */
+function renderAll(){renderPlayers();renderCurSelect();renderMyBp();renderSlots();renderDir();renderSynthState();renderOutputBar();renderHistory();renderScaleStrip()}
+renderAll();
+</script>
+</body>
+</html>
