@@ -282,8 +282,12 @@ class CollectTests(unittest.TestCase):
                                 "title": "HealthAutoExport-2026-09-28.json"})
             line = {"type": "user", "message": {"content": [{"type": "tool_result", "content": inner}]},
                     "toolUseResult": inner}
+            old_line = dict(line, timestamp="2020-01-01T00:00:00.000Z",
+                            toolUseResult=json.dumps({"content": b64, "id": "OLD999", "mimeType": "application/json",
+                                                      "title": "HealthAutoExport-2020-01-01.json"}))
+            old_line["message"] = {"content": []}
             with open(os.path.join(proj, "sess.jsonl"), "w") as f:
-                f.write(json.dumps({"type": "other"}) + "\n" + json.dumps(line) + "\n")
+                f.write(json.dumps({"type": "other"}) + "\n" + json.dumps(old_line) + "\n" + json.dumps(line) + "\n")
             csv_b64 = base64.b64encode("日期,体重\n2026-09-28,70\n".encode()).decode()
             with open(os.path.join(proj, "sess2.jsonl"), "w") as f:
                 f.write(json.dumps({"toolUseResult": json.dumps({"content": csv_b64, "id": "CCC333",

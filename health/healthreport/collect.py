@@ -13,6 +13,7 @@ import json
 import os
 import re
 import time
+from datetime import datetime
 
 
 def _candidates_from_obj(obj):
@@ -35,6 +36,17 @@ def _candidates_from_obj(obj):
 def _safe_name(title, file_id):
     name = re.sub(r"[\\/:*?\"<>|\s]+", "_", title or file_id).strip("._") or file_id
     return name
+
+
+def _line_time(obj):
+    """会话记录每一行自带的 ISO 时间戳（UTC），没有就返回 None。"""
+    ts = obj.get("timestamp") if isinstance(obj, dict) else None
+    if not isinstance(ts, str):
+        return None
+    try:
+        return datetime.fromisoformat(ts.replace("Z", "+00:00")).timestamp()
+    except ValueError:
+        return None
 
 
 def scan(roots=None, since_hours=24, title_filter=None):
@@ -78,9 +90,13 @@ def scan(roots=None, since_hours=24, title_filter=None):
                         if "mimeType" not in line:   # 下载结果里一定有 mimeType
                             continue
                         try:
-                            consider(json.loads(line), mt + i * 1e-6)
+                            obj = json.loads(line)
                         except ValueError:
                             continue
+                        ts = _line_time(obj)
+                        if ts is not None and ts < cutoff:
+                            continue   # 同一个会话每天都会运行，只要这次新下载的
+                        consider(obj, (ts or mt) + i * 1e-6)
             except OSError:
                 continue
     return found

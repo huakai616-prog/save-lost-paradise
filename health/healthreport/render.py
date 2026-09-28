@@ -372,7 +372,7 @@ def build_html(r, narrative=None, links=None):
         '“平时”指你自己过去约 4 周的中位数（HRV 用 60 天）。' + FOOTER + '</div></td></tr>')
 
     body = "".join(parts)
-    return (f'<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8">'
+    return _entities(f'<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8">'
             f'<meta name="viewport" content="width=device-width,initial-scale=1">'
             f'<title>身体日报 {e(r["date"])}</title></head>'
             f'<body style="margin:0;padding:0;background:{PAGE};font-family:{FONT};color:{INK}">'
@@ -381,6 +381,15 @@ def build_html(r, narrative=None, links=None):
             f'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" '
             f'style="max-width:640px;background:{SURFACE};border:1px solid {BORDER};border-radius:12px;font-family:{FONT}">'
             f'{body}</table></td></tr></table></body></html>')
+
+
+def _entities(html_text):
+    """把 emoji 等 BMP 以外的字符写成 &#x...; 实体。
+
+    Google Drive 把 HTML 转成 Google 文档时会把 4 字节的 UTF-8 字符（emoji）解码成乱码，
+    写成实体后邮件和文档都能正常显示。
+    """
+    return "".join(c if ord(c) < 0x10000 else f"&#x{ord(c):X};" for c in html_text)
 
 
 FOOTER = ("本报告基于可穿戴设备数据自动生成，仅供健康参考，不能替代医生诊断；设备测量存在误差。"
