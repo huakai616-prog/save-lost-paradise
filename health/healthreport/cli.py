@@ -109,7 +109,7 @@ def cmd_build(a):
     if a.narrative and os.path.exists(a.narrative):
         with open(a.narrative, encoding="utf-8") as f:
             narrative = f.read().strip() or None
-    links = {"sheet": a.sheet_url, "folder": a.folder_url}
+    links = {"sheet": a.sheet_url, "folder": a.folder_url, "guide": a.guide_url}
     os.makedirs(a.out, exist_ok=True)
     outputs = {
         "report.html": render.build_html(r, narrative, links),
@@ -133,13 +133,16 @@ def cmd_build(a):
 
 def cmd_weather(a):
     raw = weather.fetch_open_meteo(a.lat, a.lon, a.tz)
-    with open(a.out, "w", encoding="utf-8") as f:
-        json.dump(raw, f, ensure_ascii=False)
     if raw["errors"]:
         print("获取失败：" + "；".join(raw["errors"]), file=sys.stderr)
     ok = raw["forecast"] is not None or raw["air"] is not None
-    print(("已写入 " + a.out) if ok else "没有拿到天气数据")
-    return 0 if ok else 2
+    if not ok:
+        print("没有拿到天气数据（没有写文件）")
+        return 2
+    with open(a.out, "w", encoding="utf-8") as f:
+        json.dump(raw, f, ensure_ascii=False)
+    print("已写入 " + a.out)
+    return 0
 
 
 def cmd_collect(a):
@@ -173,6 +176,7 @@ def main(argv=None):
     b.add_argument("--tz", default="Asia/Shanghai")
     b.add_argument("--sheet-url")
     b.add_argument("--folder-url")
+    b.add_argument("--guide-url", help="使用说明文档的链接")
     b.add_argument("--out", default="out")
     b.set_defaults(func=cmd_build)
 

@@ -90,7 +90,8 @@ class Analyzer:
             st["state"] = "none"
             self.add("info", "数据", "还没有收到手表数据",
                      "Google Drive 里没有找到 Health Auto Export 导出的文件。",
-                     "按说明在 iPhone 上设置 Health Auto Export 自动导出到 Google Drive，之后的报告就会包含手表数据。")
+                     "按 Google Drive「健康日报」文件夹里的「使用说明」在 iPhone 上设置 Health Auto Export 自动导出，"
+                     "之后的报告就会包含睡眠、心率、HRV 和活动数据。")
         elif latest < self.yday:
             st["state"] = "stale"
             self.add("info", "数据", f"手表数据已经 {(self.today - latest).days} 天没有更新",

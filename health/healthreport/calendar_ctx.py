@@ -98,7 +98,7 @@ def analyze(events, all_day, day, tz):
         h = mid.hour + mid.minute / 60
         return min(abs(h - 12.5), abs(h - 18.5))
 
-    suggestion = min(free, key=pref) if free else None
+    suggestion = min(free, key=pref) if (free and events) else None   # 没有日程时不用特意推荐时段
     evs = sorted(events, key=lambda x: x["start"])
     return {
         "count": len(events),

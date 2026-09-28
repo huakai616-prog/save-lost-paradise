@@ -362,6 +362,8 @@ def build_html(r, narrative=None, links=None):
     foot = []
     if ds.get("latest_day"):
         foot.append(f'手表数据截至 {_mmdd(ds["latest_day"])}，共 {ds["days_available"]} 天。')
+    if links.get("guide"):
+        foot.append(f'<a href="{e(links["guide"])}" style="color:{SERIES}">使用说明</a>')
     if links.get("sheet"):
         foot.append(f'<a href="{e(links["sheet"])}" style="color:{SERIES}">打开手动记录表</a>')
     if links.get("folder"):
