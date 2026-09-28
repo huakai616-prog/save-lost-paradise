@@ -10,6 +10,8 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 from typing import Optional
 
+MIN_TRACKED_SLEEP_H = 3.0   # 与 thresholds.SLEEP_MIN_TRACKED_H 一致
+
 
 @dataclass
 class SleepNight:
@@ -81,6 +83,8 @@ class HealthStore:
         self.warnings.extend(data.warnings)
 
     def _sleep_to_values(self, n: SleepNight):
+        if (n.total_h or 0) < MIN_TRACKED_SLEEP_H:
+            return   # 多半是没戴表或手表没电，不当作真实睡眠参与基线和趋势
         for k, v in (("sleep_h", n.total_h), ("sleep_deep_h", n.deep_h), ("sleep_rem_h", n.rem_h),
                      ("sleep_core_h", n.core_h), ("sleep_awake_h", n.awake_h),
                      ("sleep_inbed_h", n.inbed_h)):

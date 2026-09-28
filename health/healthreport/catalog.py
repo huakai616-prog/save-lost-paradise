@@ -8,7 +8,7 @@ class Metric:
     key: str
     name: str          # 中文名
     unit: str          # 显示单位
-    agg: str           # 同一天多条样本时怎么合并：sum / mean / min / max / last
+    agg: str           # 同一天多条样本时怎么合并：sum / mean / median / min / max / last
     better: str        # 数值越高越好 "up"，越低越好 "down"，无所谓 "none"
     decimals: int = 0
     sd_floor: float = 0.0   # 基线标准差下限，防止基线过于平稳时小波动就报警
@@ -38,8 +38,8 @@ METRICS = {m.key: m for m in [
     Metric("hrv_night", "夜间 HRV", "毫秒", "mean", "up", 0, 4),
     Metric("resp_rate", "睡眠呼吸频率", "次/分", "mean", "none", 1, 0.5),
     Metric("resp_night", "夜间呼吸频率", "次/分", "mean", "none", 1, 0.5),
-    Metric("spo2", "血氧", "%", "mean", "up", 1, 1.0),
-    Metric("spo2_night", "夜间血氧", "%", "mean", "up", 1, 1.0),
+    Metric("spo2", "血氧", "%", "median", "up", 1, 1.0),
+    Metric("spo2_night", "夜间血氧", "%", "median", "up", 1, 1.0),
     Metric("spo2_min", "最低血氧", "%", "min", "up", 0, 1.0),
     Metric("wrist_temp", "睡眠手腕温度", "°C", "mean", "none", 2, 0.15, 5),
     Metric("body_temp", "体温", "°C", "max", "none", 1, 0.2),
@@ -53,6 +53,8 @@ METRICS = {m.key: m for m in [
     Metric("bp_sys", "收缩压", "mmHg", "mean", "down", 0, 4),
     Metric("bp_dia", "舒张压", "mmHg", "mean", "down", 0, 3),
     Metric("glucose", "血糖", "mmol/L", "mean", "none", 1, 0.3),
+    Metric("glucose_min", "最低血糖", "mmol/L", "min", "none", 1, 0.3),
+    Metric("glucose_max", "最高血糖", "mmol/L", "max", "none", 1, 0.3),
     # 环境与习惯
     Metric("headphone_db", "耳机音量", "dB", "mean", "down", 0, 2),
     Metric("env_db", "环境噪音", "dB", "mean", "down", 0, 2),

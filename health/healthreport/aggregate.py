@@ -5,6 +5,7 @@ add_* 调用，再由 finish() 统一汇总成 DayData，这样两种来源的�
 """
 
 from collections import defaultdict
+from statistics import median
 from datetime import timedelta
 
 from .catalog import METRICS
@@ -113,6 +114,8 @@ class Aggregator:
                 vals = [v for _, v, _ in entries]
                 if agg == "sum":
                     v = self._sum(entries)
+                elif agg == "median":
+                    v = median(vals)
                 elif agg == "min":
                     v = min(vals)
                 elif agg == "max":
@@ -153,7 +156,8 @@ class Aggregator:
                     continue
                 vals = [v for t, v in samples if night.start <= t <= night.end]
                 if len(vals) >= 2:
-                    dd.values[night.day][night_key] = sum(vals) / len(vals)
+                    # 血氧用中位数：单个偏低的读数（压着手臂、表带松）不该拉低整晚
+                    dd.values[night.day][night_key] = median(vals) if key == "spo2" else sum(vals) / len(vals)
 
     def _nights_from_segments(self):
         """原始睡眠片段 → 每晚汇总。每个来源分开拼接，最后每天挑最好的一晚。"""

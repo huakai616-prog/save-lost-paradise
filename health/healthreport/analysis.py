@@ -15,7 +15,7 @@
 """
 
 from datetime import datetime, time, timedelta
-from statistics import mean, pstdev
+from statistics import mean, median, pstdev
 
 from . import baseline as bl
 from . import thresholds as T
@@ -23,6 +23,15 @@ from .catalog import METRICS, fmt
 from .timeutil import cn_date
 
 LEVEL_ORDER = {"red": 0, "orange": 1, "yellow": 2, "info": 3, "green": 4}
+PHYSIO = ("rhr", "hrv", "resp_rate", "wrist_temp", "spo2")
+SHORT_TITLE = {"rhr": "静息心率比平时高", "hrv": "HRV 比平时低", "resp_rate": "睡眠呼吸频率比平时高",
+               "wrist_temp": "夜间手腕温度比平时高", "spo2": "血氧比平时低"}
+# 记录里出现这些词时，不管手表数据如何都要提醒及时就医
+URGENT_SYMPTOMS = ("胸痛", "胸闷", "呼吸困难", "气短", "喘不上气", "憋气", "晕厥", "昏厥", "晕倒", "意识",
+                   "口唇发紫", "嘴唇发紫", "言语不清", "说话不清", "口齿不清", "肢体无力", "半身", "口角歪斜",
+                   "剧烈头痛", "咳血", "便血", "黑便")
+FEVER_WORDS = ("发烧", "发热", "高烧", "低烧")
+MEDICAL_CATS = ("体温", "心率", "呼吸", "血氧", "血压", "血糖")
 
 
 def finding(level, cat, title, detail="", advice=""):
@@ -231,7 +240,8 @@ class Analyzer:
         """
         today, yday = self.today, self.yday
         night = self.s.sleep.get(today)
-        wt0 = night.start.date() if night and night.start else yday
+        # 苹果把夜间手腕温度记在“睡眠时段开始”那天，时段开始常比真正入睡早（入睡 00:40，时段 23:50）
+        wt_days = [(night.start - timedelta(hours=3)).date(), night.start.date()] if night and night.start else [yday]
 
         def choose(base, night_key, fallback_days):
             if self.s.get(today, night_key) is not None and bl.compute(self.s, night_key, today):
@@ -247,7 +257,7 @@ class Analyzer:
             "hrv": hrv,
             "resp_rate": choose("resp_rate", "resp_night", [today, yday]),
             "spo2": choose("spo2", "spo2_night", [today, yday]),
-            "wrist_temp": ("wrist_temp", self._anchor("wrist_temp", [wt0])),
+            "wrist_temp": ("wrist_temp", self._anchor("wrist_temp", wt_days)),
             "sleep_h": ("sleep_h", today if today in self.s.sleep else None),
             "steps": ("steps", yday),
         }
@@ -279,14 +289,16 @@ class Analyzer:
             out["wrist_temp"] = f"夜间手腕温度比平时高 {x['delta']:.1f}°C"
         x = self._ev(a, "spo2", n)
         if x and x["delta"] is not None and (x["delta"] <= -T.SPO2_DROP or x["value"] < T.SPO2_OUTLIER_ABS):
-            out["spo2"] = f"血氧 {x['value']:.0f}%，低于平时（{x['baseline']:.0f}%）"
-        x = self._ev(a, "sleep_h", n)
-        if x and x["delta"] is not None and abs(x["delta"]) >= T.SLEEP_DEV_H:
-            out["sleep_h"] = f"睡眠 {x['value']:.1f} 小时，和平时（{x['baseline']:.1f}）差了 {abs(x['delta']):.1f} 小时"
-        if n == 0:
-            x = self._ev(a, "steps")
-            if x and x["baseline"] and x["value"] < x["baseline"] * T.STEPS_DROP_RATIO:
-                out["steps"] = f"昨天步数 {x['value']:,.0f}，不到平时的一半"
+            out["spo2"] = f"血氧 {x['value']:.1f}%，低于平时（{x['baseline']:.1f}%）"
+        # 行为类指标（睡得少、走得少）只在已经有生理指标异常时才一起算，睡得多不算异常
+        if any(k in out for k in PHYSIO):
+            x = self._ev(a, "sleep_h", n)
+            if x and x["delta"] is not None and x["delta"] <= -T.SLEEP_DEV_H:
+                out["sleep_h"] = f"睡眠 {x['value']:.1f} 小时，比平时（{x['baseline']:.1f}）少 {abs(x['delta']):.1f} 小时"
+            if n == 0:
+                x = self._ev(a, "steps")
+                if x and x["baseline"] and x["value"] < x["baseline"] * T.STEPS_DROP_RATIO:
+                    out["steps"] = f"昨天步数 {x['value']:,.0f}，不到平时的一半"
         return out
 
     def _vitals(self):
@@ -310,8 +322,29 @@ class Analyzer:
         self._absolute_vitals(v, a)
         return v
 
+    def _absolute_flags(self, a):
+        """昨晚/昨天是否有不依赖基线的危险值，用于和多项偏离一起升级为红色。"""
+        flags = []
+        rk, rd = a["rhr"]
+        x = self.s.get(rd, rk) if rd else None
+        if x is not None and x > T.RHR_HIGH:
+            flags.append(f"静息心率 {x:.0f} 次/分")
+        rk, rd = a["resp_rate"]
+        x = self.s.get(rd, rk) if rd else None
+        if x is not None and x > T.RESP_HIGH:
+            flags.append(f"睡眠呼吸频率 {x:.1f} 次/分")
+        rk, rd = a["spo2"]
+        x = self.s.get(rd, rk) if rd else None
+        if x is not None and x < T.SPO2_LOW_RED:
+            flags.append(f"血氧 {x:.1f}%")
+        return flags
+
     def _recovery_rules(self, v, a, now, prev, hs):
-        """所有“恢复/可能在生病”的信号合并成一条提醒，避免同一件事说好几遍。"""
+        """所有“恢复/可能在生病”的信号合并成一条提醒，避免同一件事说好几遍。
+
+        多项偏离里必须至少有一项是生理指标（静息心率、HRV、呼吸、手腕温度、血氧）；
+        只是睡得少、走得少不会被当成“可能在生病”。
+        """
         notes, level = [], None
 
         def bump(lv):
@@ -319,12 +352,13 @@ class Analyzer:
             if level is None or LEVEL_ORDER[lv] < LEVEL_ORDER[level]:
                 level = lv
 
+        physio0 = [k for k in now if k in PHYSIO]
         n0, n1 = len(now), len(prev)
-        if n0 >= 2:
+        if n0 >= 2 and physio0:
             bump("orange")
             if n1 >= 2:
                 notes.append("而且前一晚也是这样")
-        elif n0 == 1 and next(iter(now)) in ("rhr", "resp_rate", "wrist_temp"):
+        elif len(physio0) == 1 and physio0[0] in ("rhr", "resp_rate", "wrist_temp"):
             bump("yellow")
 
         def persist(name, thr):
@@ -343,15 +377,22 @@ class Analyzer:
             bump("orange")
             notes.append("夜间手腕温度明显或连续偏高（室温、被子太厚、饮酒、月经周期也会影响；"
                          "手腕温度不等于体温，不舒服时用体温计量一下）")
+        hrv_band = False
         if hs and hs.week_z is not None:
             if hs.below_days >= 3:
                 bump("orange")
+                hrv_band = True
                 notes.append(f"HRV 近 7 天均值 {hs.week_ms:.0f} 毫秒，已连续几天低于你的正常范围"
                              f"（{hs.lo_ms:.0f}–{hs.hi_ms:.0f}）")
             elif hs.week_z < -T.HRV_WEEK_BAND:
                 bump("orange" if "rhr" in now else "yellow")
+                hrv_band = True
                 notes.append(f"HRV 近 7 天均值 {hs.week_ms:.0f} 毫秒，低于你的正常范围（{hs.lo_ms:.0f}–{hs.hi_ms:.0f}），"
                              "恢复可能不足")
+
+        flags = self._absolute_flags(a)
+        if len(physio0) + ("sleep_h" in now) + ("steps" in now) >= 3 and flags:
+            bump("red")
 
         if level is None:
             rhr, hrv = v.get("rhr"), v.get("hrv")
@@ -363,23 +404,32 @@ class Analyzer:
         drinks = self._recent_manual("alcohol")
         detail = ("；".join(now.values()) + "。") if now else ""
         detail += "".join(f"{n}。" for n in notes)
-        causes = "常见原因有睡眠不足、饮酒"
-        causes += f"（你记录了 {drinks:g} 杯）" if drinks else ""
-        causes += "、晚饭太晚、压力大、训练过量，也可能是身体正在对抗感染。"
-        if level == "orange":
+        slept_little = "sleep_h" in now or ((self.s.sleep.get(self.today) and
+                                             (self.s.sleep[self.today].total_h or 9) < T.SLEEP_SHORT_H))
+        causes = ["睡眠不足"] if slept_little else []
+        causes.append(f"饮酒（你记录了 {drinks:g} 杯）" if drinks else "饮酒")
+        causes += ["晚饭太晚", "压力大", "训练过量"]
+        cause_txt = "常见原因有" + "、".join(causes) + "，也可能是身体正在对抗感染。"
+        if level == "red":
+            self.add("red", "恢复", "多项身体指标同时异常，而且" + "、".join(flags) + "超出正常范围",
+                     detail + "这不是诊断，但这种组合值得尽快让医生看看。",
+                     "建议今天联系医生或去医院；如伴有胸痛、呼吸困难、意识模糊或口唇发紫，请立即拨打 120。")
+        elif level == "orange":
             if symptoms:
                 title = f"你记录了不适（{symptoms}），身体指标也有变化"
-            elif n0 >= 2:
+            elif n0 >= 2 and physio0:
                 title = f"{n0} 项身体指标同时偏离平常水平"
             else:
                 title = "恢复指标持续偏离平常水平"
             strong = n0 >= 3 or n1 >= 2 or bool(symptoms)
             advice = ("今天以恢复为主：运动降到轻松强度或休息一天，多喝水，今晚早睡。留意发热、咽痛、咳嗽、乏力；"
                       + ("如果出现发热等症状，可以考虑就医或检测。" if strong else "如果 2–3 天还不恢复，建议就医。"))
-            self.add("orange", "恢复", title, detail + causes, advice)
+            self.add("orange", "恢复", title, detail + cause_txt, advice)
         else:
-            key = next(iter(now)) if now else None
-            title = (now[key].split("，")[0] + " 略高于平常") if key else "HRV 近一周低于你的正常范围"
+            if hrv_band and not physio0:
+                title = "HRV 近一周低于你的正常范围"
+            else:
+                title = SHORT_TITLE.get(physio0[0], "恢复指标略偏离平常") if physio0 else "恢复指标略偏离平常"
             self.add("yellow", "恢复", title, detail + "单项指标偶尔波动很常见。", "今天运动别太猛，明天再看是否恢复。")
         return level
 
@@ -397,11 +447,14 @@ class Analyzer:
                          "发热、脱水、饮酒、咖啡因、焦虑、睡眠不足都可能引起。",
                          "注意休息补水；若持续 3 天以上或伴心慌、胸闷、气短、头晕，建议就医。")
         rhr = v.get("rhr")
-        if rhr and (rhr["value"] < T.RHR_LOW or
-                    (rhr["value"] < T.RHR_LOW_NEW and rhr["baseline"] and rhr["baseline"] >= 60)):
-            if not (rhr["baseline"] and rhr["baseline"] < T.RHR_LOW + 5):   # 平时就很低（常运动）不提示
-                self.add("orange", "心率", f"静息心率 {rhr['value']:.0f} 次/分，明显偏低",
-                         (f"你平时约 {rhr['baseline']:.0f}。" if rhr["baseline"] else "") + "常锻炼的人心率偏低可能正常。",
+        if rhr:
+            val, base = rhr["value"], rhr["baseline"]
+            near_usual = base is not None and base - val <= 5          # 平时就这么低（常运动的人）
+            if val < T.RHR_VERY_LOW or (val < T.RHR_LOW and not near_usual) or \
+                    (val < T.RHR_LOW_NEW and base is not None and base >= 60) or \
+                    (base is not None and base - val >= T.RHR_DROP and val < 50):
+                self.add("orange", "心率", f"静息心率 {val:.0f} 次/分，明显偏低",
+                         (f"你平时约 {base:.0f}。" if base else "") + "常锻炼的人心率偏低可能正常。",
                          "如出现头晕、乏力、眼前发黑或晕厥，请及时就医。")
         rk, rd = a["resp_rate"]
         if rd:
@@ -422,8 +475,10 @@ class Analyzer:
                          "手表血氧有误差，但反复偏低可能与睡眠呼吸问题有关（这不是诊断）。",
                          "建议近期到呼吸科或睡眠门诊评估。若出现气短、胸闷、口唇发紫，请立即就医。")
             elif sp and sp["value"] < T.SPO2_LOW:
-                self.add("orange" if low >= 3 else "yellow", "血氧",
-                         f"血氧 {sp['value']:.0f}%，略低于常见的 95% 以上" + (f"（近 7 天有 {low} 天）" if low >= 3 else ""),
+                # 连续多天偏低、而且比你自己的平常水平还低，才升级为橙色
+                worse = sp["baseline"] is not None and sp["value"] <= sp["baseline"] - T.SPO2_DROP
+                self.add("orange" if (low >= 3 and worse) else "yellow", "血氧",
+                         f"血氧 {sp['value']:.1f}%，低于常见的 95% 以上" + (f"（近 7 天有 {low} 天）" if low >= 3 else ""),
                          "手表血氧误差约 ±2–3 个百分点，表带松、手冷、压着手臂睡都会让读数偏低。",
                          "睡前把表带稍微系紧一点继续观察；如果常打鼾、夜里憋醒、白天明显犯困，建议到睡眠门诊看看。")
         _, bt = _pick(s, "body_temp", [self.today, self.yday])
@@ -492,15 +547,15 @@ class Analyzer:
             out[k] = {"value": v, "day": d.isoformat()} if d else None
         w_now = s.values_between("weight_kg", self.today - timedelta(days=6), self.today)
         w_prev = s.values_between("weight_kg", self.today - timedelta(days=13), self.today - timedelta(days=7))
-        if w_now and w_prev:
-            chg = mean(w_now) - mean(w_prev)
+        if len(w_now) >= 2 and len(w_prev) >= 2:   # 至少各称两次、用中位数，避免早晚一次称重的正常波动
+            chg = median(w_now) - median(w_prev)
             out["weight_change_7d"] = chg
             if abs(chg) >= T.WEIGHT_WEEK_CHANGE_KG:
                 self.add("orange", "身体", f"体重一周内变化 {chg:+.1f} kg", "短期波动多与水分、饮食有关。",
                          "如果不是在刻意减重或增重，或者伴有水肿、气短、乏力，请就医。")
         w_old = s.values_between("weight_kg", self.today - timedelta(days=59), self.today - timedelta(days=30))
-        if w_now and len(w_old) >= 2:
-            pct = (mean(w_now) - mean(w_old)) / mean(w_old) * 100
+        if len(w_now) >= 2 and len(w_old) >= 2:
+            pct = (median(w_now) - median(w_old)) / median(w_old) * 100
             out["weight_change_pct_long"] = pct
             if pct <= -T.WEIGHT_LOSS_PCT:
                 self.add("orange", "身体", f"最近一两个月体重下降了 {abs(pct):.0f}%", "",
@@ -509,34 +564,43 @@ class Analyzer:
             b = out["bmi"]["value"]
             out["bmi_cat"] = "偏瘦" if b < 18.5 else "正常" if b < 24 else "超重" if b < 28 else "肥胖"
         self._bp_rules(out)
-        g = out["glucose"]
-        if g and g["day"] >= self.yday.isoformat():
-            if g["value"] < T.GLUCOSE_LOW:
-                self.add("orange", "血糖", f"血糖偏低（{g['value']:.1f} mmol/L）", "",
-                         "马上吃点含糖食物；如果反复出现低血糖，请就医。")
-            elif g["value"] >= T.GLUCOSE_HIGH:
-                self.add("orange", "血糖", f"血糖偏高（{g['value']:.1f} mmol/L）", "",
+        for d in (self.today, self.yday):
+            lo = s.get(d, "glucose_min") if s.get(d, "glucose_min") is not None else s.get(d, "glucose")
+            hi = s.get(d, "glucose_max") if s.get(d, "glucose_max") is not None else s.get(d, "glucose")
+            if lo is None:
+                continue
+            when = "今天" if d == self.today else "昨天"
+            if lo < T.GLUCOSE_LOW:
+                self.add("orange", "血糖", f"{when}测到血糖偏低（{lo:.1f} mmol/L）", "",
+                         ("马上吃点含糖食物；" if d == self.today else "如果再次出现心慌、出汗、手抖，马上吃点含糖食物；")
+                         + "反复出现低血糖请就医。")
+            elif hi is not None and hi >= T.GLUCOSE_HIGH:
+                self.add("orange", "血糖", f"{when}测到血糖偏高（{hi:.1f} mmol/L）", "",
                          "如果不是餐后不久测的，建议就医检查空腹血糖和糖化血红蛋白。")
+            break
         return out
 
     def _bp_rules(self, out):
         s = self.s
-        pairs = [(s.get(d, "bp_sys"), s.get(d, "bp_dia")) for d in (self.today - timedelta(days=i) for i in range(7))]
-        pairs = [(a, b) for a, b in pairs if a is not None and b is not None]
+        days = [self.today - timedelta(days=i) for i in range(7)]
+        pairs = [(d, s.get(d, "bp_sys"), s.get(d, "bp_dia")) for d in days]
+        pairs = [(d, a, b) for d, a, b in pairs if a is not None and b is not None]
         if not pairs:
             return
-        latest_sys, latest_dia = pairs[0]
-        avg_sys, avg_dia = mean(p[0] for p in pairs), mean(p[1] for p in pairs)
+        latest_day, latest_sys, latest_dia = pairs[0]
+        avg_sys, avg_dia = mean(p[1] for p in pairs), mean(p[2] for p in pairs)
         out["bp_avg7"] = {"sys": avg_sys, "dia": avg_dia, "days": len(pairs)}
-        recent = out["bp_sys"]["day"] >= (self.today - timedelta(days=2)).isoformat()
-        txt = f"{latest_sys:.0f}/{latest_dia:.0f} mmHg"
+        recent = latest_day >= self.today - timedelta(days=2)
+        when = "今天" if latest_day == self.today else "昨天" if latest_day == self.yday else \
+            f"{latest_day.month}月{latest_day.day}日"
+        txt = f"{latest_sys:.0f}/{latest_dia:.0f} mmHg（{when}）"
         protocol = "规范自测：连续 7 天，每天早晚各测一次，每次测 2–3 遍、间隔 1 分钟，取后 6 天的平均值。"
         if recent and (latest_sys >= T.BP_GRADE3_SYS or latest_dia >= T.BP_GRADE3_DIA):
             self.add("red", "血压", f"血压 {txt}，达到 3 级高血压水平", "这个读数需要马上处理（这不是诊断）。",
                      "静坐休息 5 分钟后复测；若仍 ≥180/110 请尽快就医；若伴胸痛、呼吸困难、剧烈头痛、视物模糊、"
                      "言语不清或肢体无力，请立即拨打 120。")
             return
-        grade2 = sum(1 for a, b in pairs if a >= T.BP_GRADE2_SYS or b >= T.BP_GRADE2_DIA)
+        grade2 = sum(1 for _, a, b in pairs if a >= T.BP_GRADE2_SYS or b >= T.BP_GRADE2_DIA)
         if grade2 >= 2:
             self.add("red", "血压", f"近 7 天有 {grade2} 天血压 ≥160/100", "",
                      "建议这几天内到心内科或全科就诊，请勿自行用药。")
@@ -561,7 +625,15 @@ class Analyzer:
     def _manual(self):
         entries = {d.isoformat(): rec for d, rec in self.s.manual.items() if d >= self.yday}
         sym = self._recent_manual("symptoms")
-        if sym and not any(f["title"].startswith("你记录了不适") for f in self.findings):
+        urgent = [w for w in URGENT_SYMPTOMS if sym and w in sym]
+        if urgent:
+            self.add("red", "记录", f"你记录的症状里有「{'、'.join(urgent)}」",
+                     f"原话：{sym}。这类症状可能需要尽快处理（这不是诊断）。",
+                     "如果现在仍有这些症状，请立即就医或拨打 120；已经缓解，也建议尽快找医生看看。")
+        elif sym and any(w in sym for w in FEVER_WORDS):
+            self.add("orange", "记录", f"你记录了发热：{sym}", "",
+                     "今天别运动，多喝水、多休息，量一下体温；超过 38.5°C 持续不退或持续 3 天以上请就医。")
+        elif sym and not any(f["title"].startswith("你记录了不适") for f in self.findings):
             self.add("yellow", "记录", f"你记录了不适：{sym}", "", "多休息、多喝水，留意变化；症状加重或持续请就医。")
         drinks = self._recent_manual("alcohol")
         if drinks and drinks >= T.ALCOHOL_DRINKS:
@@ -646,7 +718,10 @@ class Analyzer:
             self.add("yellow", "日程", f"今天日程很满（{c['count']} 项，约 {c['busy_hours']:.1f} 小时）",
                      f"最长连续 {c['longest_block_hours']:.1f} 小时。",
                      "每 60–90 分钟起身活动一下、喝口水；把最费脑的事放在精力最好的时段。")
-        sleep_h = (r.get("sleep") or {}).get("total_h")
+        sl = r.get("sleep") or {}
+        sleep_h = sl.get("total_h") if sl.get("which") == "last_night" else None
+        if sleep_h is not None and sleep_h < T.SLEEP_MIN_TRACKED_H:
+            sleep_h = None
         if c.get("first_start_dt") and sleep_h and sleep_h < T.SLEEP_TARGET_H \
                 and c["first_start_dt"].time() <= time(8, 30):
             self.add("yellow", "日程", f"今天 {c['first_start']} 就有安排，而昨晚睡得不多", "",
@@ -689,6 +764,11 @@ class Analyzer:
         score = round(sum(p[1] * p[2] for p in parts) / sum(p[2] for p in parts))
         if v.get("recovery_level") == "orange":
             score = min(score, 60)
+        # 有需要就医的提醒时，“状态分”不能还显示充沛
+        if any(f["level"] == "red" for f in self.findings):
+            score = min(score, 40)
+        elif any(f["level"] == "orange" and f["cat"] in MEDICAL_CATS for f in self.findings):
+            score = min(score, 55)
         for lo, label, tone in ((85, "充沛", "green"), (70, "良好", "green"), (55, "一般", "yellow"),
                                 (0, "需要恢复", "orange")):
             if score >= lo:
@@ -698,24 +778,40 @@ class Analyzer:
                 "partial": len(core) < 3}
 
     def _plan(self, r):
+        """今日运动建议。先看有没有需要处理的健康问题，再看恢复状态、睡眠和天气。"""
         rd = r.get("readiness")
         w = self.weather or {}
         if not w.get("reliable", True):
             w = {}
         feels = w.get("feels_max") if w.get("feels_max") is not None else w.get("temp_max")
-        outdoor_ok = (w.get("aqi") is None or w["aqi"] <= 150) and (feels is None or feels < T.HEAT_ORANGE)
-        where = "" if outdoor_ok else "今天天气不适合户外，建议在室内进行。"
+        aqi = w.get("aqi")
+        outdoor_ok = (aqi is None or aqi <= 150) and (feels is None or feels < T.HEAT_ORANGE)
         slot = (self.cal or {}).get("exercise_slot")
-        when = f"日程里 {slot} 比较空，可以安排在这个时段。" if slot else ""
-        if r["vitals"].get("recovery_level") == "orange" or (rd and rd["score"] < 55):
-            ex = "今天以恢复为主：散步、拉伸、瑜伽，或者干脆休息一天。"
+        sl = r["sleep"]
+        last = sl.get("total_h") if sl.get("which") == "last_night" and \
+            (sl.get("total_h") or 0) >= T.SLEEP_MIN_TRACKED_H else None
+        reds = [f for f in self.findings if f["level"] == "red"]
+        medical = [f for f in self.findings if f["level"] == "orange" and f["cat"] in MEDICAL_CATS]
+        symptoms = self._recent_manual("symptoms")
+
+        if reds:
+            return {"exercise": "今天先别安排运动，把上面红色提醒里的事处理好；身体允许的话，散散步就好。", "level": "none"}
+        if medical or symptoms or r["vitals"].get("recovery_level") == "orange" \
+                or (rd and rd["score"] < 55) or (last is not None and last < T.SLEEP_VERY_SHORT_H):
+            ex, lvl = "今天以恢复为主：散步、拉伸、瑜伽，或者干脆休息一天。", "recovery"
         elif rd is None:
-            ex = "保持日常活动，今天目标 30 分钟快走或同等强度的运动。"
-        elif rd["score"] >= 80:
-            ex = "状态不错，可以安排一次有强度的训练（跑步、力量训练、间歇训练都可以）。"
+            ex, lvl = "保持日常活动，今天目标 30 分钟快走或同等强度的运动。", "moderate"
+        elif rd["score"] >= 80 and (last is None or last >= T.SLEEP_SHORT_H):
+            ex, lvl = "状态不错，可以安排一次有强度的训练（跑步、力量训练、间歇训练都可以）。", "hard"
         else:
-            ex = "适合中等强度：快走、慢跑、骑车或游泳 30–45 分钟，别冲极限。"
-        return {"exercise": ex + where + when}
+            ex, lvl = "适合中等强度：快走、慢跑、骑车或游泳 30–45 分钟，别冲极限。", "moderate"
+        if not outdoor_ok:
+            ex += "今天天气不适合户外，建议在室内进行。"
+        elif aqi is not None and aqi > 100 and lvl != "recovery":
+            ex += "空气轻度污染，长时间或高强度的运动放到室内。"
+        if slot and lvl != "recovery":
+            ex += f"日程里 {slot} 比较空，可以安排在这个时段。"
+        return {"exercise": ex, "level": lvl}
 
     # ==================================================================
     def _trends(self):

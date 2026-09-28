@@ -140,6 +140,9 @@ def _handle(el, agg, tz, cutoff, stand_hours):
             if key == "spo2" and v == 0:
                 return
             agg.add(key, day, convert(key, v, el.get("unit")), src, parse_dt(start_s, tz))
+            if key == "glucose":
+                for k2 in ("glucose_min", "glucose_max"):
+                    agg.add(k2, day, convert(key, v, el.get("unit")), src, parse_dt(start_s, tz))
     elif tag == "Workout":
         start = parse_dt(el.get("startDate"), tz)
         if start is None or (cutoff and start.date() < cutoff):

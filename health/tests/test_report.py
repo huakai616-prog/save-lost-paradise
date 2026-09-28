@@ -4,7 +4,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
@@ -122,6 +122,129 @@ class AbsoluteRuleTests(unittest.TestCase):
         s = store_for()
         s.put(TODAY, "body_temp", 38.0)
         self.assertTrue(titles(run(s), "orange", "体温"))
+
+
+class ReviewRegressionTests(unittest.TestCase):
+    """评审发现的问题，逐条固定下来。"""
+
+    def test_red_finding_blocks_hard_training(self):
+        s = store_for()
+        s.put(TODAY, "bp_sys", 186)
+        s.put(TODAY, "bp_dia", 114)
+        r = run(s)
+        self.assertTrue(titles(r, "red", "血压"))
+        self.assertEqual(r["plan"]["level"], "none")
+        self.assertLessEqual(r["readiness"]["score"], 40)
+
+    def test_urgent_symptom_words(self):
+        s = store_for()
+        s.manual[TODAY - timedelta(days=1)] = {"symptoms": "早上有点胸痛"}
+        r = run(s)
+        self.assertTrue(titles(r, "red", "记录"))
+        self.assertEqual(r["plan"]["level"], "none")
+        s.manual[TODAY - timedelta(days=1)] = {"symptoms": "发烧 37.8"}
+        r = run(s)
+        self.assertTrue(titles(r, "orange", "记录"))
+        self.assertEqual(r["plan"]["level"], "recovery")
+
+    def test_short_sleep_never_gets_hard_plan(self):
+        s = store_for()
+        n = s.sleep[TODAY]
+        n.total_h = 5.6
+        s.put(TODAY, "sleep_h", 5.6)
+        self.assertNotEqual(run(s)["plan"]["level"], "hard")
+
+    def test_lazy_weekend_is_not_illness(self):
+        s = store_for()
+        s.sleep[TODAY].total_h = 9.5
+        s.put(TODAY, "sleep_h", 9.5)
+        s.put(TODAY - timedelta(days=1), "steps", 1500)
+        r = run(s)
+        self.assertFalse(titles(r, "orange", "恢复"))
+
+    def test_under_3h_night_is_not_an_outlier(self):
+        s = store_for()
+        s.sleep[TODAY].total_h = 1.4
+        s.values[TODAY].pop("sleep_h", None)
+        s.put(TODAY - timedelta(days=1), "steps", 1500)
+        r = run(s)
+        self.assertFalse(titles(r, "orange", "恢复"))
+        self.assertTrue(any("只记录到" in t for t in titles(r, "info")))
+
+    def test_multi_outlier_plus_absolute_flag_is_red(self):
+        s = store_for("illness")
+        s.put(TODAY - timedelta(days=1), "rhr", 106)
+        r = run(s)
+        self.assertTrue(titles(r, "red", "恢复"))
+
+    def test_yellow_titles_have_the_right_direction(self):
+        s = store_for()
+        base = [s.get(TODAY - timedelta(days=i), "rhr") for i in range(3, 30)]
+        s.put(TODAY - timedelta(days=1), "rhr", sorted(base)[len(base) // 2] + 6)
+        r = run(s)
+        rec = [f for f in r["findings"] if f["cat"] == "恢复"]
+        self.assertTrue(rec)
+        self.assertNotIn("略高于平常", rec[0]["title"])
+        self.assertIn("静息心率", rec[0]["title"])
+
+    def test_wrist_temp_stamped_before_midnight_onset(self):
+        s = store_for()
+        n = s.sleep[TODAY]
+        n.start = n.start.replace(hour=0, minute=40) + timedelta(days=1) if n.start.hour >= 12 else n.start.replace(hour=0, minute=40)
+        # 时段开始于前一天 23:50，样本记在前一天
+        s.put(TODAY - timedelta(days=1), "wrist_temp", 36.6)
+        r = run(s)
+        self.assertIsNotNone(r["vitals"]["wrist_temp"])
+        self.assertEqual(r["vitals"]["wrist_temp"]["day"], (TODAY - timedelta(days=1)).isoformat())
+
+    def test_low_rhr_even_for_athletes_when_far_below_usual(self):
+        s = store_for()
+        for i in range(1, 60):
+            s.put(TODAY - timedelta(days=i), "rhr", 44)
+        s.put(TODAY - timedelta(days=1), "rhr", 33)
+        self.assertTrue(titles(run(s), "orange", "心率"))
+
+    def test_old_bp_reading_not_reported_as_current(self):
+        s = store_for()
+        s.put(TODAY - timedelta(days=6), "bp_sys", 182)
+        s.put(TODAY - timedelta(days=6), "bp_dia", 112)
+        s.put(TODAY, "bp_sys", 118)
+        r = run(s)
+        self.assertFalse(titles(r, "red", "血压"))
+
+    def test_glucose_low_reading_not_hidden_by_mean(self):
+        from healthreport.aggregate import Aggregator
+        agg = Aggregator()
+        for v in (5.4, 3.1, 6.2):
+            agg.add("glucose", TODAY - timedelta(days=1), v)
+            agg.add("glucose_min", TODAY - timedelta(days=1), v)
+            agg.add("glucose_max", TODAY - timedelta(days=1), v)
+        s = store_for()
+        s.merge(agg.finish())
+        self.assertTrue(any("偏低" in t for t in titles(run(s), "orange", "血糖")))
+
+    def test_spo2_night_uses_median(self):
+        from healthreport.aggregate import Aggregator
+        agg = Aggregator()
+        for v in (94, 90, 90, 88, 94, 93, 93, 93, 90, 93):
+            agg.add("spo2", TODAY, v)
+        self.assertEqual(agg.finish().values[TODAY]["spo2"], 93)
+
+    def test_calendar_rule_ignores_previous_night(self):
+        s = store_for()
+        del s.sleep[TODAY]
+        s.values[TODAY].pop("sleep_h", None)
+        s.sleep[TODAY - timedelta(days=1)].total_h = 5.4
+        cal = {"count": 1, "busy_hours": 1, "longest_block_hours": 1, "first_start": "08:00",
+               "first_start_dt": datetime(2026, 9, 29, 8, 0, tzinfo=TZ), "last_end": "09:00",
+               "last_end_dt": datetime(2026, 9, 29, 9, 0, tzinfo=TZ), "events": [], "all_day": [],
+               "exercise_slot": None}
+        r = run(s, calendar=cal)
+        self.assertFalse(any("昨晚睡得不多" in t for t in titles(r)))
+
+    def test_plan_moves_indoors_on_light_pollution(self):
+        r = run(store_for(), weather={"reliable": True, "aqi": 118, "aqi_level": "轻度污染", "aqi_advice": ""})
+        self.assertIn("室内", r["plan"]["exercise"])
 
 
 class WeatherTests(unittest.TestCase):

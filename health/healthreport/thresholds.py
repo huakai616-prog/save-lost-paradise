@@ -42,6 +42,8 @@ VITALS_OUTLIERS_FOR_ALERT = 2   # 同时 ≥2 项异常才发橙色提醒（同 
 RHR_HIGH = 100             # AHA：成人静息心率 60–100
 RHR_HIGH_DAYS_RED = 3      # 连续 3 天 >100 → 建议就医
 RHR_LOW = 40
+RHR_VERY_LOW = 35          # 不管平时多低都提醒
+RHR_DROP = 10              # 比平时低 10 次/分以上
 RHR_LOW_NEW = 50           # 平时 ≥60，突然 <50
 SPO2_LOW = 95              # 手表血氧 92–94%：留意；误差约 ±2–3 个百分点
 SPO2_LOW_RED = 92          # ≥2 晚 <92% → 建议就医（睡眠呼吸问题）
@@ -69,7 +71,7 @@ HEADPHONE_DB = 80            # WHO-ITU H.870：80 dB 每周 40 小时
 
 # ---- 体重：WS/T 428-2013 ----
 WEIGHT_WEEK_CHANGE_KG = 2.0
-WEIGHT_LOSS_PCT = 5.0
+WEIGHT_LOSS_PCT = 5.0      # AAFP 2021 定义是 6–12 个月内 ≥5%；这里只有 60 天数据，且无法区分是否有意减重，用橙色（ENG）
 
 # ---- 手动记录 ----
 ALCOHOL_DRINKS = 2

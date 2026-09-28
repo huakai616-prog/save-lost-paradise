@@ -153,6 +153,9 @@ def _parse_metric(agg, metric, tz):
         if key == "spo2":
             lo = e.get("Min", e.get("min"))
             agg.add("spo2_min", day, convert("spo2", lo if lo is not None else q, units), _src(e), ts)
+        elif key == "glucose":   # 低血糖看当天最低值，高血糖看最高值，不能被均值掩盖
+            agg.add("glucose_min", day, convert(key, q, units), _src(e), ts)
+            agg.add("glucose_max", day, convert(key, q, units), _src(e), ts)
 
 
 def _hours_field(e, *names):
