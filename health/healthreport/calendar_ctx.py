@@ -49,8 +49,14 @@ def load(path, day: date, tz):
         if end is None or end <= start:
             end = start + timedelta(minutes=30)
         start, end = start.astimezone(tz), end.astimezone(tz)
-        if start.date() <= day <= end.date():
-            events.append({"title": title, "start": start, "end": end})
+        if not (start.date() <= day <= end.date()):
+            continue
+        # 休假、出差这类跨天的“不在办公室”事件，覆盖了今天整个白天或长达 20 小时以上，当全天事件看
+        if (end - start) >= timedelta(hours=20) or (
+                start <= datetime.combine(day, DAY_START, tz) and end >= datetime.combine(day, DAY_END, tz)):
+            all_day.append(title)
+            continue
+        events.append({"title": title, "start": start, "end": end})
     return analyze(events, all_day, day, tz)
 
 
@@ -67,7 +73,9 @@ def _merge(intervals):
 def analyze(events, all_day, day, tz):
     day_start = datetime.combine(day, time(0, 0), tz)
     day_end = day_start + timedelta(days=1)
-    clipped = [(max(ev["start"], day_start), min(ev["end"], day_end)) for ev in events]
+    # 跨午夜的事件只算今天这一段，显示的时间也用裁剪后的
+    events = [dict(ev, start=max(ev["start"], day_start), end=min(ev["end"], day_end)) for ev in events]
+    clipped = [(ev["start"], ev["end"]) for ev in events]
     busy = _merge(clipped)
     busy_h = sum((e - s).total_seconds() for s, e in busy) / 3600
 

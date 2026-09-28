@@ -275,6 +275,22 @@ class CalendarTests(unittest.TestCase):
         self.assertEqual(c["exercise_slot"], "11:00–14:00")
 
 
+class CalendarEdgeTests(unittest.TestCase):
+    def test_multi_day_timed_event_is_all_day_context(self):
+        evs = [{"summary": "休假（不在办公室）", "start": "2026-09-27T09:00:00+08:00", "end": "2026-10-08T09:00:00+08:00"},
+               {"summary": "夜班", "start": "2026-09-28T22:00:00+08:00", "end": "2026-09-29T06:00:00+08:00"}]
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as f:
+            json.dump(evs, f, ensure_ascii=False)
+        try:
+            c = calendar_ctx.load(f.name, date(2026, 9, 29), TZ)
+        finally:
+            os.unlink(f.name)
+        self.assertEqual(c["all_day"], ["休假（不在办公室）"])
+        self.assertEqual(c["count"], 1)
+        self.assertEqual(c["first_start"], "00:00")      # 夜班只算今天的部分
+        self.assertEqual(c["busy_hours"], 6.0)
+
+
 class HistoryTests(unittest.TestCase):
     def test_roundtrip(self):
         from healthreport.sample import generate
