@@ -1,0 +1,12 @@
+# 健康数据绝不能提交到这个公开仓库
+data/
+out/
+demo/
+*.csv
+*.zip
+*.xml
+HealthAutoExport*
+history-*
+weather.json
+calendar.json
+__pycache__/
