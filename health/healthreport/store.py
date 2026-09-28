@@ -55,6 +55,7 @@ class DayData:
     workouts: list = field(default_factory=list)
     latest: Optional[datetime] = None   # 文件里最晚的时间戳，用于决定合并顺序
     source_name: str = ""
+    primary_days: Optional[set] = None  # 文件名写明的日期；其余日期的值只补空、不覆盖
     warnings: list = field(default_factory=list)
 
 
@@ -70,11 +71,17 @@ class HealthStore:
 
     # ---- 写入 ----
     def merge(self, data: DayData):
+        own = data.primary_days
         for day, kv in data.values.items():
             for k, v in kv.items():
-                if v is not None:
-                    self.values[day][k] = v
+                if v is None:
+                    continue
+                if own is not None and day not in own and self.values[day].get(k) is not None:
+                    continue   # 相邻日期里跨午夜的零星样本，不能覆盖那天完整的值
+                self.values[day][k] = v
         for day, night in data.sleep.items():
+            if own is not None and day not in own and day in self.sleep:
+                continue
             self.sleep[day] = night
             self._sleep_to_values(night)
         for w in data.workouts:

@@ -191,11 +191,40 @@ class ReviewRegressionTests(unittest.TestCase):
         s = store_for()
         n = s.sleep[TODAY]
         n.start = n.start.replace(hour=0, minute=40) + timedelta(days=1) if n.start.hour >= 12 else n.start.replace(hour=0, minute=40)
-        # 时段开始于前一天 23:50，样本记在前一天
+        # 时段开始于前一天 23:50，样本记在前一天（入睡当天没有样本）
+        s.values[TODAY].pop("wrist_temp", None)
         s.put(TODAY - timedelta(days=1), "wrist_temp", 36.6)
         r = run(s)
         self.assertIsNotNone(r["vitals"]["wrist_temp"])
         self.assertEqual(r["vitals"]["wrist_temp"]["day"], (TODAY - timedelta(days=1)).isoformat())
+
+    def test_wrist_temp_prefers_onset_day_when_present(self):
+        s = store_for()
+        n = s.sleep[TODAY]
+        n.start = n.start.replace(hour=0, minute=56) + timedelta(days=1) if n.start.hour >= 12 else n.start.replace(hour=0, minute=56)
+        s.put(TODAY, "wrist_temp", 35.3)          # 入睡当天的样本就是昨晚的
+        s.put(TODAY - timedelta(days=1), "wrist_temp", 35.1)
+        self.assertEqual(run(s)["vitals"]["wrist_temp"]["day"], TODAY.isoformat())
+
+    def test_negated_symptoms_do_not_alert(self):
+        for text in ("无", "无胸闷胸痛", "没有发烧", "不发热"):
+            s = store_for()
+            s.manual[TODAY - timedelta(days=1)] = {"symptoms": text}
+            r = run(s)
+            self.assertFalse(titles(r, "red", "记录"), text)
+            self.assertFalse(titles(r, "orange", "记录"), text)
+        s = store_for()
+        s.manual[TODAY - timedelta(days=1)] = {"symptoms": "咳嗽不止，胸痛"}
+        self.assertTrue(titles(run(s), "red", "记录"))
+
+    def test_logged_period_relaxes_wrist_temp(self):
+        s = store_for()
+        base = s.get(TODAY - timedelta(days=1), "wrist_temp") or 35.2
+        n = s.sleep[TODAY]
+        s.put(n.start.date(), "wrist_temp", 35.2 + 0.6)
+        s.manual[TODAY - timedelta(days=3)] = {"period": "是"}
+        r = run(s)
+        self.assertNotIn("wrist_temp", " ".join(r["vitals"]["signals"]))
 
     def test_low_rhr_even_for_athletes_when_far_below_usual(self):
         s = store_for()
@@ -314,12 +343,83 @@ class RenderTests(unittest.TestCase):
         self.assertTrue(subj.startswith("身体日报 9/29"))
         json.loads(render.build_brief(r))
 
+    def test_body_style_attribute_is_intact(self):
+        from html.parser import HTMLParser
+        attrs = {}
+
+        class P(HTMLParser):
+            def handle_starttag(self, tag, a):
+                if tag in ("body", "table") and tag not in attrs:
+                    attrs[tag] = dict(a)
+        P().feed(render.build_html(run(store_for())))
+        self.assertEqual(set(attrs["body"]), {"style"})
+        self.assertIn("PingFang SC", attrs["body"]["style"])
+
+    def test_partial_weather_and_all_day_calendar(self):
+        r = run(store_for(), weather={"source": "网络搜索", "reliable": False, "desc": "晴", "temp_max": 24,
+                                      "temp_min": None, "aqi": 85, "aqi_level": "良"},
+                calendar={"count": 0, "busy_hours": 0, "longest_block_hours": 0, "first_start": None,
+                          "last_end": None, "events": [], "all_day": ["国庆节"], "exercise_slot": None})
+        md = render.build_markdown(r)
+        self.assertIn("最高 24°C", md)
+        self.assertIn("全天：国庆节", md)
+        html = render.build_html(r)
+        self.assertNotIn("0 项安排", html)
+        self.assertEqual(html.count("网络搜索"), 1)
+
+    def test_subject_wording(self):
+        subj = render.subject(run(store_for("illness")))
+        self.assertIn("1 项需留意", subj)
+        self.assertIn("条小提醒", subj)
+        s = HealthStore()
+        s.merge(ingest_hae.parse(generate(TODAY - timedelta(days=4), 30), TZ))
+        self.assertIn("手表数据未更新", render.subject(run(s)))
+
+    def test_brief_carries_advice_for_urgent_items(self):
+        s = store_for()
+        s.put(TODAY, "bp_sys", 185)
+        s.put(TODAY, "bp_dia", 100)
+        brief = json.loads(render.build_brief(run(s)))
+        red = [f for f in brief["findings"] if f["level"] == "red"][0]
+        self.assertIn("复测", red["advice"])
+
     def test_trimming(self):
         fs = [{"level": "yellow", "cat": "x", "title": f"t{i}", "detail": "", "advice": ""} for i in range(9)]
         fs.insert(0, {"level": "orange", "cat": "x", "title": "o", "detail": "", "advice": ""})
         main, extra, infos, goods = render.split_findings(fs)
         self.assertEqual(len(main), 6)
         self.assertEqual(len(extra), 4)
+        fs.append({"level": "info", "cat": "数据", "title": "i", "detail": "", "advice": ""})
+        main, extra, infos, goods = render.split_findings(fs)
+        self.assertEqual(len(main) + len(infos), 6)
+
+
+class MergeTests(unittest.TestCase):
+    def test_cross_midnight_rows_do_not_overwrite_full_day(self):
+        from healthreport.cli import primary_days
+        self.assertEqual(primary_days("x/HealthAutoExport-2026-09-26__abc.json"), {date(2026, 9, 26)})
+        self.assertEqual(len(primary_days("HealthAutoExport-2026-09-01-2026-09-10.json")), 10)
+        day26 = ingest_hae.parse({"data": {"metrics": [{"name": "headphone_audio_exposure", "units": "dBASPL", "data": [
+            {"date": "2026-09-26 00:00:00 +0800", "qty": 84}]}]}}, TZ)
+        day26.primary_days = {date(2026, 9, 26)}
+        day27 = ingest_hae.parse({"data": {"metrics": [{"name": "headphone_audio_exposure", "units": "dBASPL", "data": [
+            {"date": "2026-09-26 23:50:00 +0800", "qty": 60}, {"date": "2026-09-27 10:00:00 +0800", "qty": 70}]}]}}, TZ)
+        day27.primary_days = {date(2026, 9, 27)}
+        s = HealthStore()
+        s.merge(day26)
+        s.merge(day27)
+        self.assertEqual(s.get(date(2026, 9, 26), "headphone_db"), 84)
+        self.assertEqual(s.get(date(2026, 9, 27), "headphone_db"), 70)
+
+    def test_zip_of_json_exports(self):
+        import zipfile
+        from healthreport.cli import load_store
+        with tempfile.TemporaryDirectory() as d:
+            with zipfile.ZipFile(os.path.join(d, "HealthAutoExport_20260928101010.zip"), "w") as z:
+                z.writestr("HealthAutoExport_20260928101010/HealthAutoExport-2026-08-01-2026-09-29.json",
+                           json.dumps(generate(TODAY, 60)))
+            store, _ = load_store([d], TZ, TODAY, log=lambda *a: None)
+        self.assertGreaterEqual(len(store.watch_days()), 59)
 
 
 class CliTests(unittest.TestCase):

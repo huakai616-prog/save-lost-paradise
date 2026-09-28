@@ -32,6 +32,21 @@ URGENT_SYMPTOMS = ("胸痛", "胸闷", "呼吸困难", "气短", "喘不上气",
                    "剧烈头痛", "咳血", "便血", "黑便")
 FEVER_WORDS = ("发烧", "发热", "高烧", "低烧")
 MEDICAL_CATS = ("体温", "心率", "呼吸", "血氧", "血压", "血糖")
+NEGATORS = ("无", "没", "不", "未", "否认", "非")
+NONE_TEXT = {"无", "没有", "没", "否", "不", "正常", "无症状", "none", "no", "-", "—", "/", "0"}
+
+
+def real_symptom_clauses(text):
+    """把症状描述按标点拆开，去掉“无胸痛”“没有发烧”“不发热”这类否定的分句。"""
+    import re
+    if not text or text.strip().lower() in NONE_TEXT:
+        return []
+    clauses = [c.strip() for c in re.split(r"[，,。；;、\s]+", text) if c.strip()]
+    return [c for c in clauses if not c.startswith(NEGATORS) and c.lower() not in NONE_TEXT]
+
+
+def symptom_hits(text, words):
+    return [w for w in words if any(w in c for c in real_symptom_clauses(text))]
 
 
 def finding(level, cat, title, detail="", advice=""):
@@ -167,9 +182,7 @@ class Analyzer:
             self.add("yellow", "睡眠", f"{label}只睡了 {tot} 小时",
                      "少于 6 小时会影响注意力和免疫力。", "今天避免疲劳驾驶和高强度训练，今晚争取早睡 30–60 分钟。")
         elif tot < T.SLEEP_TARGET_H:
-            gap = round((T.SLEEP_TARGET_H - night.total_h) * 6) * 10
-            self.add("yellow", "睡眠", f"{label}睡了 {tot} 小时，少于建议的 7 小时", "",
-                     f"今晚争取提前 {max(gap, 10):.0f} 分钟上床。")
+            pass   # 单晚 6–7 小时很常见（手表测得的睡眠本来就比自我感觉短），只看近 7 晚平均
         else:
             self.add("green", "睡眠", f"{label}睡了 {tot} 小时")
 
@@ -194,14 +207,18 @@ class Analyzer:
                      (f"其中 {out['short_nights7']} 晚不足 6 小时。" if out["short_nights7"] else "")
                      + "连续缺觉的影响会累积，一两晚补觉补不回来。",
                      "这周固定上床和起床时间；如果长期入睡困难或早醒，可以咨询睡眠门诊。")
+        elif out["nights7"] >= 4 and out["avg7_h"] < T.SLEEP_TARGET_H:
+            gap = round((T.SLEEP_TARGET_H - out["avg7_h"]) * 6) * 10
+            self.add("yellow", "睡眠", f"近 7 晚平均睡 {out['avg7_h']:.1f} 小时，少于建议的 7 小时", "",
+                     f"这周每晚争取提前 {max(gap, 10):.0f} 分钟上床。")
         elif out["nights7"] >= 4 and out["avg7_h"] > T.SLEEP_AVG7_LONG_H:
             self.add("yellow", "睡眠", f"近 7 晚平均睡 {out['avg7_h']:.1f} 小时，偏长", "",
                      "如果睡很久仍然乏力、白天犯困，建议咨询医生。")
         sd, dsd = out.get("onset_sd_min"), out.get("duration_sd_min")
         onset_bad = sd is not None and sd > T.ONSET_SD_YELLOW_MIN
-        dur_bad = dsd is not None and dsd > T.DURATION_SD_ORANGE_MIN
+        dur_bad = dsd is not None and dsd > T.DURATION_SD_YELLOW_MIN
         if onset_bad or dur_bad:
-            level = "orange" if (sd or 0) > T.ONSET_SD_ORANGE_MIN or dur_bad else "yellow"
+            level = "orange" if (sd or 0) > T.ONSET_SD_ORANGE_MIN or (dsd or 0) > T.DURATION_SD_ORANGE_MIN else "yellow"
             detail = []
             if onset_bad:
                 detail.append(f"入睡时间前后相差约 ±{sd:.0f} 分钟")
@@ -240,8 +257,9 @@ class Analyzer:
         """
         today, yday = self.today, self.yday
         night = self.s.sleep.get(today)
-        # 苹果把夜间手腕温度记在“睡眠时段开始”那天，时段开始常比真正入睡早（入睡 00:40，时段 23:50）
-        wt_days = [(night.start - timedelta(hours=3)).date(), night.start.date()] if night and night.start else [yday]
+        # 按天汇总时，手腕温度记在“睡眠时段开始”那天（时段开始常比真正入睡早，如入睡 00:40、时段 23:50）。
+        # 先看入睡当天：早上生成报告时，那天只可能有昨晚的样本；没有再看前一天。
+        wt_days = [night.start.date(), (night.start - timedelta(hours=3)).date()] if night and night.start else [yday]
 
         def choose(base, night_key, fallback_days):
             if self.s.get(today, night_key) is not None and bl.compute(self.s, night_key, today):
@@ -257,7 +275,7 @@ class Analyzer:
             "hrv": hrv,
             "resp_rate": choose("resp_rate", "resp_night", [today, yday]),
             "spo2": choose("spo2", "spo2_night", [today, yday]),
-            "wrist_temp": ("wrist_temp", self._anchor("wrist_temp", wt_days)),
+            "wrist_temp": choose("wrist_temp", "wrist_temp_night", wt_days),
             "sleep_h": ("sleep_h", today if today in self.s.sleep else None),
             "steps": ("steps", yday),
         }
@@ -285,7 +303,8 @@ class Analyzer:
         if x and x["delta"] is not None and (x["delta"] >= T.RESP_DELTA or x["z"] >= T.RESP_Z):
             out["resp_rate"] = f"睡眠呼吸频率 {x['value']:.1f}，比平时（{x['baseline']:.1f}）高 {x['delta']:.1f} 次/分"
         x = self._ev(a, "wrist_temp", n)
-        if x and x["delta"] is not None and x["delta"] >= T.TEMP_DELTA:
+        thr = T.TEMP_DELTA_PERIOD if self._period_recent() else T.TEMP_DELTA
+        if x and x["delta"] is not None and x["delta"] >= thr:
             out["wrist_temp"] = f"夜间手腕温度比平时高 {x['delta']:.1f}°C"
         x = self._ev(a, "spo2", n)
         if x and x["delta"] is not None and (x["delta"] <= -T.SPO2_DROP or x["value"] < T.SPO2_OUTLIER_ABS):
@@ -331,7 +350,7 @@ class Analyzer:
             flags.append(f"静息心率 {x:.0f} 次/分")
         rk, rd = a["resp_rate"]
         x = self.s.get(rd, rk) if rd else None
-        if x is not None and x > T.RESP_HIGH:
+        if x is not None and x >= T.RESP_HIGH:
             flags.append(f"睡眠呼吸频率 {x:.1f} 次/分")
         rk, rd = a["spo2"]
         x = self.s.get(rd, rk) if rd else None
@@ -409,6 +428,8 @@ class Analyzer:
         causes = ["睡眠不足"] if slept_little else []
         causes.append(f"饮酒（你记录了 {drinks:g} 杯）" if drinks else "饮酒")
         causes += ["晚饭太晚", "压力大", "训练过量"]
+        if self._period_recent() and "wrist_temp" in now:
+            causes.insert(0, "经期前后的正常体温变化（你记录了经期）")
         cause_txt = "常见原因有" + "、".join(causes) + "，也可能是身体正在对抗感染。"
         if level == "red":
             self.add("red", "恢复", "多项身体指标同时异常，而且" + "、".join(flags) + "超出正常范围",
@@ -459,8 +480,8 @@ class Analyzer:
         rk, rd = a["resp_rate"]
         if rd:
             rr = [s.get(rd - timedelta(days=i), rk) for i in range(2)]
-            if all(x is not None and x > T.RESP_HIGH for x in rr):
-                self.add("red", "呼吸", f"睡眠呼吸频率连续 2 晚超过 {T.RESP_HIGH} 次/分",
+            if all(x is not None and x >= T.RESP_HIGH for x in rr):
+                self.add("red", "呼吸", f"睡眠呼吸频率连续 2 晚达到 {T.RESP_HIGH} 次/分以上",
                          "明显高于成人 12–20 次/分的正常范围。",
                          "建议尽快就医评估；若出现呼吸困难、胸痛、口唇发紫，请立即拨打 120。")
         sk, sd = a["spo2"]
@@ -474,10 +495,11 @@ class Analyzer:
                 self.add("red", "血氧", f"近 7 天有 {very_low} 天平均血氧低于 {T.SPO2_LOW_RED}%",
                          "手表血氧有误差，但反复偏低可能与睡眠呼吸问题有关（这不是诊断）。",
                          "建议近期到呼吸科或睡眠门诊评估。若出现气短、胸闷、口唇发紫，请立即就医。")
-            elif sp and sp["value"] < T.SPO2_LOW:
-                # 连续多天偏低、而且比你自己的平常水平还低，才升级为橙色
-                worse = sp["baseline"] is not None and sp["value"] <= sp["baseline"] - T.SPO2_DROP
-                self.add("orange" if (low >= 3 and worse) else "yellow", "血氧",
+            elif sp and sp["value"] < T.SPO2_LOW and (
+                    (sp["baseline"] is not None and sp["value"] <= sp["baseline"] - T.SPO2_DROP)
+                    or (sp["baseline"] is None and sp["value"] < T.SPO2_OUTLIER_ABS)):
+                # 健康人夜间血氧 92–94% 也常见，所以要比你自己的平常水平低 2 个点以上才提醒；连续多天才升橙色
+                self.add("orange" if low >= 3 else "yellow", "血氧",
                          f"血氧 {sp['value']:.1f}%，低于常见的 95% 以上" + (f"（近 7 天有 {low} 天）" if low >= 3 else ""),
                          "手表血氧误差约 ±2–3 个百分点，表带松、手冷、压着手臂睡都会让读数偏低。",
                          "睡前把表带稍微系紧一点继续观察；如果常打鼾、夜里憋醒、白天明显犯困，建议到睡眠门诊看看。")
@@ -596,7 +618,7 @@ class Analyzer:
         txt = f"{latest_sys:.0f}/{latest_dia:.0f} mmHg（{when}）"
         protocol = "规范自测：连续 7 天，每天早晚各测一次，每次测 2–3 遍、间隔 1 分钟，取后 6 天的平均值。"
         if recent and (latest_sys >= T.BP_GRADE3_SYS or latest_dia >= T.BP_GRADE3_DIA):
-            self.add("red", "血压", f"血压 {txt}，达到 3 级高血压水平", "这个读数需要马上处理（这不是诊断）。",
+            self.add("red", "血压", f"血压 {txt}，读数处于 3 级高血压范围", "这个读数需要马上处理（这不是诊断）。",
                      "静坐休息 5 分钟后复测；若仍 ≥180/110 请尽快就医；若伴胸痛、呼吸困难、剧烈头痛、视物模糊、"
                      "言语不清或肢体无力，请立即拨打 120。")
             return
@@ -615,22 +637,32 @@ class Analyzer:
                      "还不算高血压，但值得通过生活方式干预。", "少盐（每天不超过 5 克）、控制体重、规律运动、限酒。")
 
     # ==================================================================
+    def _period_recent(self):
+        """近 10 天手动记录里标了经期。经期前后手腕温度本来就会变化，提醒要放宽。"""
+        for i in range(10):
+            v = str(self.s.manual.get(self.today - timedelta(days=i), {}).get("period") or "").strip().lower()
+            if v and v not in NONE_TEXT and v not in ("否", "no", "n", "false"):
+                return True
+        return False
+
     def _recent_manual(self, field):
         for d in (self.today, self.yday):
             v = self.s.manual.get(d, {}).get(field)
+            if field == "symptoms" and v and not real_symptom_clauses(v):
+                continue   # “无”“没有不舒服”等于没填
             if v:
                 return v
         return None
 
     def _manual(self):
-        entries = {d.isoformat(): rec for d, rec in self.s.manual.items() if d >= self.yday}
+        entries = {d.isoformat(): rec for d, rec in self.s.manual.items() if self.yday <= d <= self.today}
         sym = self._recent_manual("symptoms")
-        urgent = [w for w in URGENT_SYMPTOMS if sym and w in sym]
+        urgent = symptom_hits(sym, URGENT_SYMPTOMS) if sym else []
         if urgent:
             self.add("red", "记录", f"你记录的症状里有「{'、'.join(urgent)}」",
                      f"原话：{sym}。这类症状可能需要尽快处理（这不是诊断）。",
                      "如果现在仍有这些症状，请立即就医或拨打 120；已经缓解，也建议尽快找医生看看。")
-        elif sym and any(w in sym for w in FEVER_WORDS):
+        elif sym and symptom_hits(sym, FEVER_WORDS):
             self.add("orange", "记录", f"你记录了发热：{sym}", "",
                      "今天别运动，多喝水、多休息，量一下体温；超过 38.5°C 持续不退或持续 3 天以上请就医。")
         elif sym and not any(f["title"].startswith("你记录了不适") for f in self.findings):
@@ -678,8 +710,9 @@ class Analyzer:
         tmax3 = [t for t in (w.get("tmax_next3") or []) if t is not None]
         fmax = w.get("feels_max") if w.get("feels_max") is not None else w.get("temp_max")
         fmin = w.get("feels_min") if w.get("feels_min") is not None else w.get("temp_min")
-        if tmax3 and max(tmax3) >= 37 or (len(tmax3) == 3 and min(tmax3) >= 35):
-            lv = "红色" if max(tmax3) >= 40 else "橙色" if max(tmax3) >= 37 else "黄色"
+        near = tmax3[:2]   # 橙色、红色高温预警看 24 小时内（今天、明天）
+        if (near and max(near) >= 37) or (len(tmax3) == 3 and min(tmax3) >= 35):
+            lv = "红色" if near and max(near) >= 40 else "橙色" if near and max(near) >= 37 else "黄色"
             items.append(("orange", f"未来几天高温（达到高温{lv}预警标准，仅供参考）",
                           "午后尽量减少户外活动，多补水，老人和有慢性病的人尤其注意防暑"))
         elif fmax is not None and fmax >= T.HEAT_ORANGE:

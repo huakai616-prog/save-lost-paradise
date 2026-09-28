@@ -63,7 +63,9 @@ def parse_dt(s, tz=None):
     else:
         return None
     if offset is not None:
-        return dt.replace(tzinfo=offset)
+        dt = dt.replace(tzinfo=offset)
+        # UTC 时间（Z 或 +00:00）换算到本地时区，其余保留手机当时的本地偏移
+        return dt.astimezone(tz) if (tz is not None and offset.utcoffset(None) == timedelta(0)) else dt
     return dt.replace(tzinfo=tz) if tz else dt
 
 

@@ -10,8 +10,11 @@ import argparse
 import glob
 import json
 import os
+import re
 import sys
-from datetime import date, datetime
+import traceback
+import zipfile
+from datetime import date, datetime, timedelta
 
 from . import calendar_ctx, collect, history, ingest_applexml, ingest_hae, manual, render, weather
 from .analysis import Analyzer
@@ -41,6 +44,44 @@ def _is_manual_csv(path):
     return ("日期" in head or "date" in head.lower()) and not history.is_history(path)
 
 
+def _zip_jsons(path):
+    try:
+        with zipfile.ZipFile(path) as z:
+            return [n for n in z.namelist() if n.lower().endswith(".json") and not n.startswith("__MACOSX")]
+    except zipfile.BadZipFile:
+        return []
+
+
+def _parse_zip_jsons(path, tz):
+    out = []
+    with zipfile.ZipFile(path) as z:
+        for n in _zip_jsons(path):
+            with z.open(n) as f:
+                obj = json.load(f)
+            if ingest_hae.looks_like_hae(obj):
+                dd = ingest_hae.parse(obj, tz, os.path.basename(n))
+                dd.primary_days = primary_days(n)
+                out.append(dd)
+    return out
+
+
+_NAME_DAYS = re.compile(r"HealthAutoExport-(\d{4}-\d{2}-\d{2})(?:-(\d{4}-\d{2}-\d{2}))?")
+
+
+def primary_days(path):
+    """文件名里写明的日期范围（每日文件只有一天）。跨午夜的样本会出现在相邻日期里，
+    那些“非本文件日期”的值只用来补空，不覆盖别的文件里完整的一天。"""
+    m = _NAME_DAYS.search(os.path.basename(path))
+    if not m:
+        return None
+    try:
+        a = date.fromisoformat(m.group(1))
+        b = date.fromisoformat(m.group(2)) if m.group(2) else a
+    except ValueError:
+        return None
+    return {a + timedelta(days=i) for i in range((b - a).days + 1)} if b >= a else None
+
+
 def load_store(paths, tz, today, log=print):
     """读取数据目录：HealthAutoExport JSON、苹果 export.zip/xml、历史存档 history-*.csv、手动记录 CSV。"""
     store = HealthStore()
@@ -61,6 +102,12 @@ def load_store(paths, tz, today, log=print):
                 else:
                     log(f"  跳过 {name}（不认识的 CSV；请用 JSON 格式导出）")
                     continue
+            elif p.lower().endswith(".zip") and _zip_jsons(p):
+                # Health Auto Export 手动导出的压缩包：里面是 JSON
+                for dd in _parse_zip_jsons(p, tz):
+                    parsed.append(dd)
+                    log(f"  读取 {name}/{dd.source_name}：{len(dd.values)} 天，{len(dd.sleep)} 晚睡眠")
+                continue
             elif p.lower().endswith((".zip", ".xml")):
                 dd = ingest_applexml.parse(p, tz, today=today)
             else:
@@ -68,6 +115,7 @@ def load_store(paths, tz, today, log=print):
                 if dd is None:
                     log(f"  跳过 {name}（不是 Health Auto Export 的 JSON）")
                     continue
+                dd.primary_days = primary_days(p)
         except Exception as e:
             store.warnings.append(f"{name}: 读取失败（{e}）")
             log(f"  ! {name}: {e}")
@@ -89,7 +137,7 @@ def cmd_build(a):
     if a.manual:
         manual_files = [a.manual] if os.path.exists(a.manual) else []
     for mf in manual_files[-1:]:
-        entries = manual.load(mf)
+        entries = manual.load(mf, today, store.warnings)
         manual.merge_into(store, entries)
         print(f"  手动记录 {os.path.basename(mf)}：{len(entries)} 天")
     wx = None
@@ -104,31 +152,51 @@ def cmd_build(a):
             cal = calendar_ctx.load(a.calendar, today, tz)
         except Exception as e:
             store.warnings.append(f"日程读取失败：{e}")
-    r = Analyzer(store, today, tz, weather=wx, calendar=cal).run()
+    os.makedirs(a.out, exist_ok=True)
+    try:
+        r = Analyzer(store, today, tz, weather=wx, calendar=cal).run()
+    except Exception:
+        # 分析出错也要给用户一份说明，而不是什么都不发
+        err = traceback.format_exc()
+        print(err, file=sys.stderr)
+        _write(a.out, "subject.txt", f"身体日报 {today.month}/{today.day} · 今天的报告生成失败")
+        _write(a.out, "report.html", render.error_html(today, err.strip().splitlines()[-1]))
+        _write(a.out, "brief.json", json.dumps({"date": today.isoformat(), "error": err[-2000:]}, ensure_ascii=False))
+        return 1
     narrative = None
     if a.narrative and os.path.exists(a.narrative):
         with open(a.narrative, encoding="utf-8") as f:
             narrative = f.read().strip() or None
     links = {"sheet": a.sheet_url, "folder": a.folder_url, "guide": a.guide_url}
-    os.makedirs(a.out, exist_ok=True)
-    outputs = {
-        "report.html": render.build_html(r, narrative, links),
-        "report.md": render.build_markdown(r, narrative),
-        "brief.json": render.build_brief(r),
-        "subject.txt": render.subject(r),
-        "summary.json": json.dumps(r, ensure_ascii=False, indent=1, default=str),
+    # 邮件正文和标题最重要，先写；其余输出各自出错也不影响发送
+    html = render.build_html(r, narrative, links)
+    _write(a.out, "report.html", html)
+    _write(a.out, "subject.txt", render.subject(r))
+    status = 0
+    extras = {
+        "report.md": lambda: render.build_markdown(r, narrative),
+        "brief.json": lambda: render.build_brief(r),
+        "summary.json": lambda: json.dumps(r, ensure_ascii=False, indent=1, default=str),
     }
     if store.latest_day():
-        outputs[f"history-{today.isoformat()}.csv"] = history.dump(store, today)
-    for name, content in outputs.items():
-        with open(os.path.join(a.out, name), "w", encoding="utf-8") as f:
-            f.write(content)
-    print(f"  标题：{outputs['subject.txt']}")
+        extras[f"history-{today.isoformat()}.csv"] = lambda: history.dump(store, today)
+    for name, make in extras.items():
+        try:
+            _write(a.out, name, make())
+        except Exception as e:
+            print(f"  ! 生成 {name} 失败：{e}", file=sys.stderr)
+            status = 1
+    print(f"  标题：{render.subject(r)}")
     print(f"  提醒：" + "，".join(f"{k} {v}" for k, v in r["counts"].items() if v))
     for w in store.warnings[:10]:
         print(f"  ! {w}")
-    print(f"  已写入 {a.out}/report.html（{len(outputs['report.html']) // 1024} KB）")
-    return 0
+    print(f"  已写入 {a.out}/report.html（{len(html) // 1024} KB）")
+    return status
+
+
+def _write(out_dir, name, content):
+    with open(os.path.join(out_dir, name), "w", encoding="utf-8") as f:
+        f.write(content)
 
 
 def cmd_weather(a):

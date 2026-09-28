@@ -45,7 +45,7 @@ Apple Watch ──同步──▶ iPhone「健康」
 | Export Format | JSON，Export Version 选 **Version 2** |
 | Summarize Data | **打开** |
 | Time Grouping | **Hours（小时）**。这样才能只取睡眠时段算夜间 HRV、呼吸频率和血氧；如果 App 在后台经常失败，可以退而选 Days（天），报告照样能用，只是夜间指标会退化成全天均值 |
-| Date Range | **Default（默认）**，不要选 Since Last Sync（会漏掉静息心率和昨晚的睡眠） |
+| Date Range | **Default（默认）**。如果 Google Drive 类型的自动化里没有 Default，就建两个一样的自动化：一个选 **Today**、一个选 **Yesterday**（或 Previous 7 Days）。**不要选 Since Last Sync**：它会漏掉静息心率和昨晚的睡眠，还可能用不完整的数据覆盖当天的文件 |
 | 文件周期 | Day（每天一个文件） |
 | Sync Cadence | 每 1 小时 |
 | 指标 | 只勾下面这些（全选会让 App 在后台崩溃）：步数、活动能量、静息能量、锻炼分钟数、站立小时、步行+跑步距离、已爬楼层、日光下时间、心率、静息心率、步行平均心率、心率变异性、呼吸频率、血氧饱和度、睡眠时手腕温度、睡眠分析、最大摄氧量、体重、体脂率、身体质量指数、血压、体温、血糖、耳机音频暴露、心率恢复、呼吸紊乱 |
@@ -58,7 +58,7 @@ Apple Watch ──同步──▶ iPhone「健康」
 | Data Type | Workouts，JSON，Version 2 |
 | Summarize Data | **关闭**（打开会报错） |
 | 路线 Route | 关闭（文件会小很多） |
-| Date Range | Default |
+| Date Range | Default（没有就选 Today，再建一个 Yesterday） |
 
 ### 3. 手机和手表设置
 

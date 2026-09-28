@@ -57,8 +57,10 @@ def generate(end: date, days=60, scenario="normal", seed=7):
                                             "source": "Apple Watch"})
         metrics["blood_oxygen_saturation"].append({"date": _ts(d), "qty": round(rnd.gauss(96.8, 0.6), 1),
                                                    "source": "Apple Watch"})
+        # 和 Health Auto Export 一致：手腕温度记在睡眠时段开始的那天
         metrics["apple_sleeping_wrist_temperature"].append(
-            {"date": _ts(d), "qty": round(35.2 + rnd.gauss(0, 0.12) + (0.8 if ill else 0), 2), "source": "Apple Watch"})
+            {"date": _ts(bed.date()), "qty": round(35.2 + rnd.gauss(0, 0.12) + (0.8 if ill else 0), 2),
+             "source": "Apple Watch"})
         metrics["walking_heart_rate_average"].append({"date": _ts(d), "qty": round(rnd.gauss(96, 3)),
                                                       "source": "Apple Watch"})
         # 活动：end 当天只到早上，数据很少

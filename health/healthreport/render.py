@@ -26,8 +26,8 @@ STAGES = [("deep_h", "深睡", "#4a3aa7"), ("core_h", "核心", "#2a78d6"),
           ("rem_h", "REM", "#1baf7a"), ("awake_h", "清醒", "#eb6834")]
 AQI_COLORS = {"优": "#00e400", "良": "#ffff00", "轻度污染": "#ff7e00", "中度污染": "#ff0000",
               "重度污染": "#99004c", "严重污染": "#7e0023"}
-FONT = ('-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",'
-        '"Helvetica Neue",Arial,sans-serif')
+FONT = ("-apple-system,BlinkMacSystemFont,'PingFang SC','Hiragino Sans GB','Microsoft YaHei',"
+        "'Helvetica Neue',Arial,sans-serif")   # 单引号：要放进 style="..." 属性里
 
 e = html.escape
 
@@ -43,6 +43,8 @@ def _row(inner, pad="4px 24px 12px"):
 
 def _tiles(items):
     """数据块：[(标签, 数值, 小字)]。超过 3 个时两两一行，手机上也不会挤得换行。"""
+    if not items:
+        return ""
     rows = [items] if len(items) <= 3 else [items[i:i + 2] for i in range(0, len(items), 2)]
     out = []
     for row in rows:
@@ -51,7 +53,7 @@ def _tiles(items):
             cells.append(
                 f'<td valign="top" style="padding:8px 10px 8px 0;width:{100 // max(1, len(row))}%">'
                 f'<div style="font-size:12px;color:{INK2}">{e(label)}</div>'
-                f'<div style="font-size:20px;font-weight:600;color:{INK};line-height:1.3;white-space:nowrap">{e(value)}</div>'
+                f'<div style="font-size:20px;font-weight:600;color:{INK};line-height:1.3">{e(value)}</div>'
                 f'<div style="font-size:12px;color:{MUTED}">{e(sub or "")}</div></td>')
         out.append(f'<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>{"".join(cells)}</tr></table>')
     return "".join(out)
@@ -73,8 +75,10 @@ def _bars(points, key, title):
         cols.append(f'<td valign="bottom" style="padding:0 1px"><div style="height:{max(3, round(v / top * 44))}px;'
                     f'background:{color};border-radius:4px 4px 0 0"></div></td>')
     first_day = points[0]["day"][5:].replace("-", "/")
+    last_pt = next(p for p in reversed(points) if p["value"] is not None)
+    when = "" if last_pt is points[-1] else f'（{last_pt["day"][5:].replace("-", "/")}）'
     return (f'<div style="font-size:12px;color:{INK2};margin:10px 0 4px">{e(title)}'
-            f'<span style="color:{MUTED}"> · 最新 {e(fmt(key, have[-1]))}</span></div>'
+            f'<span style="color:{MUTED}"> · 最新 {e(fmt(key, have[-1]))}{e(when)}</span></div>'
             f'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" '
             f'style="height:46px;border-bottom:1px solid {BORDER}"><tr>{"".join(cols)}</tr></table>'
             f'<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>'
@@ -108,13 +112,22 @@ def _delta_str(v):
     return f"{d:+.0f}"
 
 
+def _vital_cells(x):
+    """表格里“最新”和“平时”两列。手腕温度只看和自己平时的差值，绝对值没有意义（不等于体温）。"""
+    if x["key"].startswith("wrist_temp"):
+        if x.get("delta") is None:
+            return "—", "—"
+        return f'{x["delta"]:+.2f}°C', "±0.00°C"
+    return x["value_str"], x["baseline_str"] or "—"
+
+
 def _vital_status(v):
     """根据 z 分数给出简短的文字状态（文字 + 箭头，不只靠颜色）。"""
     if not v or v.get("z") is None:
         return "建立基线中" if v else "—"
     z, key = v["z"], v["key"]
     good_up = key in ("hrv", "hrv_night", "spo2", "spo2_night", "vo2max")
-    bad_up = key in ("rhr", "resp_rate", "resp_night", "wrist_temp", "walking_hr", "breathing_dist")
+    bad_up = key in ("rhr", "resp_rate", "resp_night", "wrist_temp", "wrist_temp_night", "walking_hr", "breathing_dist")
     if abs(z) < 1:
         return "正常"
     if (z > 0 and good_up) or (z < 0 and bad_up):
@@ -139,8 +152,14 @@ def build_html(r, narrative=None, links=None):
                 f'<div style="font-size:12px;color:{MUTED};margin-top:2px">根据睡眠、HRV、静息心率和夜间体征估算'
                 f'{"（部分数据缺失）" if rd["partial"] else ""}</div>')
     else:
-        hero = (f'<div style="font-size:15px;color:{INK2}">今天还算不出状态分'
-                f'（需要睡眠和心率数据，并积累一段时间的基线）。</div>')
+        state = r["data"].get("state")
+        if state == "stale":
+            why = f'手表数据从 {_mmdd(r["data"]["latest_day"])} 起就没更新了'
+        elif state == "none":
+            why = "还没有收到手表数据"
+        else:
+            why = "需要昨晚的睡眠和心率数据，并积累至少一周的个人基线"
+        hero = f'<div style="font-size:15px;color:{INK2}">今天还算不出状态分（{e(why)}）。</div>'
     summary_bits = []
     for lv in ("red", "orange", "yellow"):
         if counts.get(lv):
@@ -160,7 +179,9 @@ def build_html(r, narrative=None, links=None):
     main, extra, infos, goods = split_findings(r["findings"])
     parts.append(_h("今天需要注意"))
     if main or infos:
-        parts.append(_row("".join(_finding_html(f) for f in main + infos)))
+        urgent = [f for f in main if f["level"] in ("red", "orange")]
+        rest = [f for f in main if f["level"] not in ("red", "orange")]
+        parts.append(_row("".join(_finding_html(f) for f in urgent + infos + rest)))
     else:
         parts.append(_row(f'<div style="font-size:14px;color:{INK2}">没有需要特别注意的地方，继续保持。</div>'))
     if extra:
@@ -211,11 +232,7 @@ def build_html(r, narrative=None, links=None):
         x = v.get(key)
         if not x:
             continue
-        val = x["value_str"] if key != "wrist_temp" else (
-            f'{x["delta"]:+.2f}°C' if x.get("delta") is not None else x["value_str"])
-        base = x["baseline_str"] or "—"
-        if key == "wrist_temp":
-            base = "±0.00°C"
+        val, base = _vital_cells(x)
         rows.append(
             f'<tr><td style="padding:7px 0;border-bottom:1px solid {GRID};font-size:14px;color:{INK}">{e(x["name"])}</td>'
             f'<td align="right" style="padding:7px 6px;border-bottom:1px solid {GRID};font-size:14px;color:{INK};'
@@ -237,12 +254,11 @@ def build_html(r, narrative=None, links=None):
     a = r["activity"]
     if any(a.get(k) is not None for k in ("steps", "active_kcal", "exercise_min")) or a.get("workouts"):
         parts.append(_h("昨日活动"))
-        parts.append(_row(_tiles([
-            ("步数", fmt("steps", a.get("steps"), False), f'近 7 天日均 {a["steps7_avg"]:,.0f}' if a.get("steps7_avg") else ""),
-            ("活动消耗", fmt("active_kcal", a.get("active_kcal")), ""),
-            ("锻炼", fmt("exercise_min", a.get("exercise_min")), ""),
-            ("站立", fmt("stand_hours", a.get("stand_hours")), ""),
-        ]), "0 24px 4px"))
+        tiles = [(lab, fmt(k, a.get(k), k != "steps"), sub) for k, lab, sub in (
+            ("steps", "步数", f'近 7 天日均 {a["steps7_avg"]:,.0f}' if a.get("steps7_avg") else ""),
+            ("active_kcal", "活动消耗", ""), ("exercise_min", "锻炼", ""), ("stand_hours", "站立", ""))
+            if a.get(k) is not None]
+        parts.append(_row(_tiles(tiles), "0 24px 4px"))
         if a.get("exercise7") is not None:
             pct = min(1.0, a["exercise7"] / 150)
             parts.append(_row(
@@ -294,7 +310,7 @@ def build_html(r, narrative=None, links=None):
             head = (f'<div style="font-size:13px;color:{INK2};margin-bottom:6px">{c["count"]} 项安排，'
                     f'约 {c["busy_hours"]:.1f} 小时'
                     + (f'，{c["first_start"]} 开始，{c["last_end"]} 结束' if c.get("first_start") else "")
-                    + "</div>")
+                    + "</div>") if c.get("count") else ""
             evs = "".join(f'<div style="font-size:14px;color:{INK};margin:2px 0">'
                           f'<span style="color:{INK2};font-variant-numeric:tabular-nums">{e(x["time"])}</span> '
                           f'{e(x["title"])}</div>' for x in c["events"][:10])
@@ -313,6 +329,10 @@ def build_html(r, narrative=None, links=None):
         t = []
         if w.get("temp_min") is not None and w.get("temp_max") is not None:
             t.append(("气温", f'{w["temp_min"]:.0f}~{w["temp_max"]:.0f}°C', w.get("desc") or ""))
+        elif w.get("temp_max") is not None:
+            t.append(("最高气温", f'{w["temp_max"]:.0f}°C', w.get("desc") or ""))
+        elif w.get("desc"):
+            t.append(("天气", w["desc"], ""))
         if w.get("aqi") is not None:
             t.append(("空气质量", f'{w["aqi"]:.0f} {w.get("aqi_level", "")}',
                       f'首要污染物 {w["aqi_primary"]}' if w.get("aqi_primary") else ""))
@@ -320,7 +340,8 @@ def build_html(r, narrative=None, links=None):
             t.append(("紫外线", f'{w["uv_max"]:.0f}', _uv_word(w["uv_max"])))
         if w.get("precip_prob") is not None:
             t.append(("降水概率", f'{w["precip_prob"]:.0f}%', ""))
-        parts.append(_row(_tiles(t[:4]), "0 24px 4px"))
+        if t:
+            parts.append(_row(_tiles(t[:4]), "0 24px 4px"))
         if w.get("aqi") is not None and w.get("aqi_level") in AQI_COLORS:
             parts.append(_row(
                 f'<div style="font-size:13px;color:{INK2}"><span style="display:inline-block;width:10px;height:10px;'
@@ -328,7 +349,7 @@ def build_html(r, narrative=None, links=None):
                 f'空气{e(w["aqi_level"])}：{e(w.get("aqi_advice", ""))}</div>', "0 24px 8px"))
         src = "来源：" + e(w.get("source") or "")
         if not w.get("reliable", True):
-            src += "（网络搜索，仅供参考）"
+            src += "（仅供参考）" if "搜索" in (w.get("source") or "") else "（网络搜索，仅供参考）"
         if w.get("sunrise") and w.get("sunset"):
             src += f' · 日出 {e(w["sunrise"])} 日落 {e(w["sunset"])}'
         if w.get("aqi_note"):
@@ -403,18 +424,33 @@ def split_findings(findings, limit=None):
     from .thresholds import MAX_MAIN_ITEMS
     limit = limit or MAX_MAIN_ITEMS
     urgent = [f for f in findings if f["level"] in ("red", "orange")]
+    infos = [f for f in findings if f["level"] == "info"]
     yellows = [f for f in findings if f["level"] == "yellow"]
-    room = max(0, limit - len(urgent))
-    return (urgent + yellows[:room], yellows[room:],
-            [f for f in findings if f["level"] == "info"],
+    room = max(0, limit - len(urgent) - len(infos))   # 提示（数据没同步等）也占名额
+    return (urgent + yellows[:room], yellows[room:], infos,
             [f for f in findings if f["level"] == "green"][:3])
 
 
-def _mmdd(d):
-    if isinstance(d, date):
-        return f"{d.month}月{d.day}日"
+def error_html(day, err):
+    """分析出错时的兜底邮件。"""
+    return _entities(
+        f'<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><title>身体日报 {day}</title></head>'
+        f'<body style="margin:0;padding:16px;background:{PAGE};font-family:{FONT};color:{INK}">'
+        f'<div style="max-width:640px;margin:0 auto;background:{SURFACE};border:1px solid {BORDER};border-radius:12px;'
+        f'padding:24px"><div style="font-size:13px;color:{MUTED}">身体日报 · {day}</div>'
+        f'<p style="font-size:15px">今天的报告生成时出了点问题，没能完成分析。数据都还在，明天会照常再试。</p>'
+        f'<p style="font-size:12px;color:{MUTED}">错误信息：{e(err)}</p>'
+        f'<p style="font-size:12px;color:{MUTED}">{FOOTER}</p></div></body></html>')
+
+
+def _mmdd(d, year=None):
     if isinstance(d, str) and len(d) >= 10:
-        return f"{int(d[5:7])}月{int(d[8:10])}日"
+        try:
+            d = date.fromisoformat(d[:10])
+        except ValueError:
+            return d
+    if isinstance(d, date):
+        return (f"{d.year}年" if year and d.year != year else "") + f"{d.month}月{d.day}日"
     return str(d or "")
 
 
@@ -433,15 +469,16 @@ def build_markdown(r, narrative=None):
         L += [narrative.strip(), ""]
     L.append("## 今天需要注意")
     main, extra, infos, goods = split_findings(r["findings"])
-    main = main + infos
-    for f in main:
+    urgent = [f for f in main if f["level"] in ("red", "orange")]
+    shown = urgent + infos + [f for f in main if f not in urgent]
+    for f in shown:
         _, icon, label = LEVELS[f["level"]]
         L.append(f"- {icon} **{f['title']}**（{label}）")
         if f["detail"]:
             L.append(f"  {f['detail']}")
         if f["advice"]:
             L.append(f"  👉 {f['advice']}")
-    if not main:
+    if not shown:
         L.append("- 没有需要特别注意的地方。")
     if extra:
         L.append("- 🟡 其他小提醒：" + "；".join(f["title"] for f in extra))
@@ -458,71 +495,109 @@ def build_markdown(r, narrative=None):
         if sl.get("avg7_h"):
             L.append(f"- 近 7 晚平均 {sl['avg7_h']:.1f} 小时")
     v = r["vitals"]
-    rows = [(v[k]["name"], v[k]["value_str"], v[k]["baseline_str"] or "—", _vital_status(v[k]))
-            for k in ("rhr", "hrv", "resp_rate", "wrist_temp", "spo2", "walking_hr", "vo2max") if v.get(k)]
+    rows = [(v[k]["name"], *_vital_cells(v[k]), _vital_status(v[k]))
+            for k in ("rhr", "hrv", "resp_rate", "wrist_temp", "spo2", "breathing_dist", "walking_hr", "vo2max")
+            if v.get(k)]
     if rows:
         L += ["", "## 恢复指标", "| 指标 | 最新 | 平时 | 状态 |", "|---|---|---|---|"]
         L += [f"| {a} | {b} | {c} | {d} |" for a, b, c, d in rows]
     a = r["activity"]
-    if a.get("steps") is not None or a.get("workouts"):
-        L += ["", "## 昨日活动",
-              f"- 步数 {fmt('steps', a.get('steps'))} · 活动消耗 {fmt('active_kcal', a.get('active_kcal'))} · "
-              f"锻炼 {fmt('exercise_min', a.get('exercise_min'))} · 站立 {fmt('stand_hours', a.get('stand_hours'))}"]
+    acts = [f"{lab} {fmt(k, a.get(k))}" for k, lab in (("steps", "步数"), ("active_kcal", "活动消耗"),
+                                                     ("exercise_min", "锻炼"), ("stand_hours", "站立"))
+            if a.get(k) is not None]
+    if acts or a.get("workouts"):
+        L += ["", "## 昨日活动"] + (["- " + " · ".join(acts)] if acts else [])
         for w in a.get("workouts") or []:
             L.append(f"- {w['name']} {w['duration_min']:.0f} 分钟" if w.get("duration_min") else f"- {w['name']}")
     c = r.get("calendar")
-    if c and c.get("count"):
-        L += ["", "## 今天的日程", f"- {c['count']} 项，约 {c['busy_hours']:.1f} 小时"]
+    if c and (c.get("count") or c.get("all_day")):
+        L += ["", "## 今天的日程"]
+        if c.get("count"):
+            L.append(f"- {c['count']} 项，约 {c['busy_hours']:.1f} 小时")
+        L += [f"- 全天：{t}" for t in c.get("all_day") or []]
         L += [f"- {x['time']} {x['title']}" for x in c["events"][:10]]
     w = r.get("weather")
     if w:
         L += ["", "## 天气与空气"]
+        temps = ""
         if w.get("temp_max") is not None:
-            L.append(f"- {w.get('desc') or ''} {w.get('temp_min', 0):.0f}~{w['temp_max']:.0f}°C")
+            temps = (f"{w['temp_min']:.0f}~{w['temp_max']:.0f}°C" if w.get("temp_min") is not None
+                     else f"最高 {w['temp_max']:.0f}°C")
+        line = " ".join(x for x in (w.get("desc") or "", temps) if x)
+        if line:
+            L.append(f"- {line}")
         if w.get("aqi") is not None:
             L.append(f"- AQI {w['aqi']:.0f} {w.get('aqi_level', '')}")
+        if not w.get("reliable", True):
+            L.append("- （网络搜索，仅供参考）")
     L += ["", "---", FOOTER]
     return "\n".join(L)
 
 
 # ---------------------------------------------------------------------------
+def _round(x):
+    if isinstance(x, float):
+        return round(x, 2)
+    if isinstance(x, dict):
+        return {k: _round(v) for k, v in x.items()}
+    if isinstance(x, list):
+        return [_round(v) for v in x]
+    return x
+
+
 def build_brief(r):
-    """给 Claude 写“今日点评”用的精简事实清单（不含原始数据）。"""
+    """给 Claude 写“今日点评”用的精简事实清单（不含原始数据）。红、橙、提示级别带上建议原文，点评不要自己编医疗建议。"""
+    vit = {}
+    for k, x in r["vitals"].items():
+        if not (isinstance(x, dict) and "baseline" in x):
+            continue
+        if x["key"].startswith("wrist_temp"):   # 手腕温度只给和平时的差值
+            vit[k] = {"delta_c": x.get("delta"), "day": x.get("day")}
+        else:
+            vit[k] = {kk: x.get(kk) for kk in ("name", "value", "baseline", "delta", "z", "day")}
+    body = r.get("body") or {}
     out = {
         "date": r["date"],
+        "data_state": r["data"].get("state"),
+        "data_latest_day": r["data"].get("latest_day"),
         "readiness": r.get("readiness"),
         "sleep": {k: r["sleep"].get(k) for k in ("which", "total_h", "start", "end", "deep_h", "rem_h",
                                                   "awake_h", "avg7_h", "short_nights7", "baseline_h")},
-        "vitals": {k: {kk: (round(x[kk], 2) if isinstance(x.get(kk), float) else x.get(kk))
-                       for kk in ("value", "baseline", "delta", "z", "day")}
-                   for k, x in r["vitals"].items() if isinstance(x, dict) and "baseline" in x},
+        "vitals": vit,
         "signals": r["vitals"].get("signals"),
         "activity": {k: r["activity"].get(k) for k in ("steps", "active_kcal", "exercise_min", "exercise7",
                                                         "stand_hours", "acwr")},
         "workouts": [w["name"] for w in r["activity"].get("workouts") or []],
+        "body": {k: body.get(k) for k in ("weight_kg", "bp_sys", "bp_dia", "weight_change_7d")},
         "calendar": {k: (r.get("calendar") or {}).get(k) for k in ("count", "busy_hours", "first_start",
-                                                                  "last_end", "exercise_slot")},
+                                                                  "last_end", "exercise_slot", "all_day")},
         "weather": {k: (r.get("weather") or {}).get(k) for k in ("desc", "temp_min", "temp_max", "aqi",
-                                                                 "aqi_level", "uv_max")},
+                                                                 "aqi_level", "uv_max", "source", "reliable")},
         "manual": r.get("manual"),
-        "findings": [{"level": f["level"], "title": f["title"]} for f in r["findings"]],
+        "findings": [dict({"level": f["level"], "title": f["title"]},
+                          **({"detail": f["detail"][:200], "advice": f["advice"]}
+                             if f["level"] in ("red", "orange", "info") else {}))
+                     for f in r["findings"]],
         "plan": r.get("plan"),
-        "data_state": r["data"].get("state"),
     }
-    return json.dumps(out, ensure_ascii=False, indent=1, default=str)
+    return json.dumps(_round(out), ensure_ascii=False, indent=1, default=str)
 
 
 def subject(r):
     rd = r.get("readiness")
     bits = [f"身体日报 {int(r['date'][5:7])}/{int(r['date'][8:10])}"]
     if rd:
-        bits.append(f"状态 {rd['score']} {rd['label']}")
+        bits.append(f"状态 {rd['score']} {rd['label']}" + ("（部分数据）" if rd.get("partial") else ""))
     c = r["counts"]
     if c.get("red"):
         bits.append(f"🔴 {c['red']} 项建议就医")
-    n = c.get("orange", 0) + c.get("yellow", 0)
-    if n:
-        bits.append(f"{n} 项需留意")
-    if r["data"].get("state") == "none":
+    if c.get("orange"):
+        bits.append(f"{c['orange']} 项需留意")
+    if c.get("yellow"):
+        bits.append(f"{c['yellow']} 条小提醒")
+    state = r["data"].get("state")
+    if state == "none":
         bits.append("等待手表数据")
+    elif state == "stale":
+        bits.append("手表数据未更新")
     return " · ".join(bits)

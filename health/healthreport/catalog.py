@@ -42,6 +42,7 @@ METRICS = {m.key: m for m in [
     Metric("spo2_night", "夜间血氧", "%", "median", "up", 1, 1.0),
     Metric("spo2_min", "最低血氧", "%", "min", "up", 0, 1.0),
     Metric("wrist_temp", "睡眠手腕温度", "°C", "mean", "none", 2, 0.15, 5),
+    Metric("wrist_temp_night", "夜间手腕温度", "°C", "mean", "none", 2, 0.15, 5),   # 记在醒来那天
     Metric("body_temp", "体温", "°C", "max", "none", 1, 0.2),
     Metric("vo2max", "心肺耐力 VO₂max", "", "last", "up", 1, 0.5, 3),   # 每周只测几次
     Metric("cardio_recovery", "心率恢复", "次/分", "mean", "up", 0, 2),

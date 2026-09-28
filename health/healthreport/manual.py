@@ -31,20 +31,29 @@ NUMERIC = {"weight", "bp_sys", "bp_dia", "mood", "stress", "energy", "alcohol", 
 TEXT = {"symptoms", "meds", "notes", "period"}
 
 
+NONE_WORDS = {"无", "没有", "没", "否", "不", "正常", "无症状", "none", "no", "n/a", "na", "-", "—", "/", "0"}
+
+
 def _match_header(h):
-    h0 = re.sub(r"[（(].*?[）)]", "", h or "").strip().lower()
+    raw = (h or "").strip()
+    if not raw or len(raw) > 20:          # 长句子是说明文字，不是表头
+        return None
+    h0 = re.sub(r"[（(].*?[）)]", "", raw).strip().lower()
     for key, names in ALIASES.items():
         for n in names:
             if h0 == n.lower():
                 return key
-    for key, names in ALIASES.items():   # 宽松匹配：表头里包含别名
+    for key, names in ALIASES.items():   # 宽松匹配：表头里包含别名（“日期”列必须精确匹配）
+        if key == "date":
+            continue
         for n in names:
             if len(n) >= 2 and n.lower() in h0:
                 return key
     return None
 
 
-def parse_date(s):
+def parse_date(s, ref=None):
+    """支持 2026-09-29、2026/9/29、2026年9月29日、9/29/2026，以及不带年份的 9月29日、9/29、9-29。"""
     s = (s or "").strip()
     if not s:
         return None
@@ -53,9 +62,20 @@ def parse_date(s):
         y, mo, d = map(int, m.groups())
     else:
         m = re.match(r"^(\d{1,2})/(\d{1,2})/(\d{4})", s)   # 美式 月/日/年
-        if not m:
-            return None
-        mo, d, y = map(int, m.groups())
+        if m:
+            mo, d, y = map(int, m.groups())
+        else:
+            m = re.match(r"^(\d{1,2})[月/.-](\d{1,2})日?$", s)
+            if not m:
+                return None
+            ref = ref or date.today()
+            mo, d = map(int, m.groups())
+            y = ref.year
+            try:
+                if date(y, mo, d) > ref:      # 不带年份时按“最近的过去”算
+                    y -= 1
+            except ValueError:
+                return None
     try:
         return date(y, mo, d)
     except ValueError:
@@ -67,27 +87,32 @@ def _num(s):
     return float(m.group()) if m else None
 
 
-def parse(text):
+def parse(text, ref=None, warnings=None):
     """CSV 文本 → {date: {字段: 值}}。同一天多行时后面的覆盖前面的非空字段。"""
-    text = text.lstrip("﻿")
+    text = text.lstrip("\ufeff")
     rows = list(csv.reader(io.StringIO(text)))
-    # 表头可能不在第一行（上面有说明文字），找第一行能认出“日期”的
-    header_idx, cols = None, None
+    # 表头可能不在第一行（上面有说明文字）：在前 10 行里找认出列最多、且含“日期”的那一行
+    header_idx, cols, best = None, None, 1
     for i, row in enumerate(rows[:10]):
         mapped = [_match_header(c) for c in row]
-        if "date" in mapped:
-            header_idx, cols = i, mapped
-            break
+        n = sum(1 for m in mapped if m)
+        if "date" in mapped and n > best:
+            header_idx, cols, best = i, mapped, n
     if header_idx is None:
+        if warnings is not None and any(any(c.strip() for c in r) for r in rows):
+            warnings.append("手动记录表没有找到“日期”列，已跳过")
         return {}
-    out = {}
+    out, bad = {}, 0
     for row in rows[header_idx + 1:]:
+        if not any(c.strip() for c in row):
+            continue
         rec = {}
         for key, cell in zip(cols, row):
-            if key is None or not cell.strip():
+            cell = cell.strip()
+            if key is None or not cell:
                 continue
             if key == "date":
-                rec["date"] = parse_date(cell)
+                rec["date"] = parse_date(cell, ref)
             elif key == "bp":
                 m = re.search(r"(\d{2,3})\s*[/／]\s*(\d{2,3})", cell)
                 if m:
@@ -96,17 +121,21 @@ def parse(text):
                 v = _num(cell)
                 if v is not None:
                     rec[key] = v
-            else:
-                rec[key] = cell.strip()
+            elif cell.lower() not in NONE_WORDS:   # “无”“没有”之类等于没填
+                rec[key] = cell
         d = rec.pop("date", None)
         if d and rec:
             out.setdefault(d, {}).update(rec)
+        elif d is None and rec and not any("示例" in c for c in row):
+            bad += 1
+    if bad and warnings is not None:
+        warnings.append(f"手动记录表有 {bad} 行日期看不懂，已跳过（日期写成 2026-09-29 这样最稳）")
     return out
 
 
-def load(path):
+def load(path, ref=None, warnings=None):
     with open(path, encoding="utf-8-sig") as f:
-        return parse(f.read())
+        return parse(f.read(), ref, warnings)
 
 
 def merge_into(store, entries):

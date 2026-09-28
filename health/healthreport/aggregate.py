@@ -93,8 +93,11 @@ class Aggregator:
         原始样本时间戳对不上时，按来源分别求和再取最大来源，近似苹果健康的去重结果。
         """
         simple_sources = {s for _, _, s in entries if s and "|" not in s}
-        timestamps = [t for t, _, _ in entries]
-        raw = len(set(timestamps)) > 1 and len(simple_sources) > 1
+        timestamps = [t for t, _, _ in entries if t is not None]
+        # Health Auto Export 汇总后的数据落在整点（按小时/天分桶），苹果已经去过重，直接相加即可；
+        # 只有原始样本（时间戳不在整点，如 export.xml 或未汇总导出）才需要按来源去重
+        bucketed = all(t.minute == 0 and t.second == 0 for t in timestamps)
+        raw = not bucketed and len(simple_sources) > 1
         if raw:
             per_src = defaultdict(float)
             for _, v, s in entries:
@@ -134,7 +137,10 @@ class Aggregator:
         dd.workouts = self.workouts
         return dd
 
-    NIGHT_KEYS = {"hrv": "hrv_night", "resp_rate": "resp_night", "spo2": "spo2_night"}
+    NIGHT_KEYS = {"hrv": "hrv_night", "resp_rate": "resp_night", "spo2": "spo2_night",
+                  "wrist_temp": "wrist_temp_night"}
+    # 手腕温度样本的时间戳是“睡眠时段开始”，常比真正入睡早一点，所以窗口往前放宽 3 小时
+    NIGHT_LEAD = {"wrist_temp": timedelta(hours=3)}
 
     def _night_metrics(self, dd):
         """有逐条或逐小时样本时，只用主睡眠时段内的数据算“夜间 HRV / 呼吸频率 / 血氧”，记在醒来那天。
@@ -144,18 +150,17 @@ class Aggregator:
         """
         for key, night_key in self.NIGHT_KEYS.items():
             samples = [(t, v) for day in self.q.get(key, {}).values() for t, v, _ in day if t is not None]
-            per_day = defaultdict(int)
-            for t, _ in samples:
-                per_day[t.date()] += 1
-            intraday = any((t.hour, t.minute, t.second) != (0, 0, 0) for t, _ in samples) or \
-                any(n > 1 for n in per_day.values())
+            intraday = any((t.hour, t.minute, t.second) != (0, 0, 0) for t, _ in samples)
             if not intraday:
                 continue
             for night in dd.sleep.values():
                 if not (night.start and night.end):
                     continue
-                vals = [v for t, v in samples if night.start <= t <= night.end]
-                if len(vals) >= 2:
+                lead = self.NIGHT_LEAD.get(key, timedelta(0))
+                vals = [v for t, v in samples if night.start - lead <= t <= night.end]
+                if key == "wrist_temp" and vals:   # 每晚只有一个样本
+                    dd.values[night.day][night_key] = sum(vals) / len(vals)
+                elif len(vals) >= 2:
                     # 血氧用中位数：单个偏低的读数（压着手臂、表带松）不该拉低整晚
                     dd.values[night.day][night_key] = median(vals) if key == "spo2" else sum(vals) / len(vals)
 

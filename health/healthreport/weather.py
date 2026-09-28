@@ -46,7 +46,7 @@ WMO_CODES = {
     61: "小雨", 63: "中雨", 65: "大雨", 66: "小冻雨", 67: "强冻雨",
     71: "小雪", 73: "中雪", 75: "大雪", 77: "米雪",
     80: "小阵雨", 81: "中阵雨", 82: "强阵雨", 85: "小阵雪", 86: "大阵雪",
-    95: "雷阵雨", 96: "雷阵雨伴小冰雹", 97: "强雷阵雨", 99: "雷阵雨伴大冰雹",
+    95: "雷阵雨", 96: "强雷阵雨", 97: "强雷阵雨", 98: "强雷阵雨", 99: "强雷阵雨",
 }
 
 
@@ -149,7 +149,7 @@ def _day_concentrations(air, day: date):
     def day_mean(field):
         vals = col(field)
         xs = [vals[i] for i in idx if i < len(vals) and vals[i] is not None]
-        return sum(xs) / len(xs) if len(xs) >= 12 else None
+        return sum(xs) / len(xs) if len(xs) >= 20 else None   # GB 3095：日均值至少 20 个小时值
 
     conc = {"pm2_5_24h": day_mean("pm2_5"), "pm10_24h": day_mean("pm10"),
             "so2_24h": day_mean("sulphur_dioxide"), "no2_24h": day_mean("nitrogen_dioxide")}

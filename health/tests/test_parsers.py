@@ -158,6 +158,20 @@ class HaeTests(unittest.TestCase):
                                 [{"date": "2026-09-28 00:00:00 +0800", "qty": 12.0}])])
         self.assertNotIn(date(2026, 9, 28), dd.values)
 
+    def test_hourly_buckets_with_single_source_labels_are_summed(self):
+        rows = [("07", 800, "X的iPhone"), ("08", 3000, "X的Apple Watch|X的iPhone"),
+                ("12", 2000, "X的Apple Watch|X的iPhone"), ("18", 4000, "X的Apple Watch")]
+        dd = self.parse([metric("step_count", "count", [{"date": f"2026-09-28 {h}:00:00 +0800", "qty": q, "source": src}
+                                                        for h, q, src in rows])])
+        self.assertEqual(dd.values[date(2026, 9, 28)]["steps"], 9800)
+
+    def test_utc_timestamps_use_local_day(self):
+        dd = self.parse([metric("sleep_analysis", "hr", [{
+            "date": "2026-09-28T00:00:00Z", "totalSleep": 7, "core": 5, "deep": 1, "rem": 1,
+            "sleepStart": "2026-09-27T15:20:00Z", "sleepEnd": "2026-09-27T22:45:00Z"}])])
+        n = dd.sleep[date(2026, 9, 28)]
+        self.assertEqual(n.start.strftime("%H:%M"), "23:20")
+
     def test_night_hrv_from_samples(self):
         hrv = [{"date": "2026-09-28 15:00:00 +0800", "qty": 20},
                {"date": "2026-09-29 01:00:00 +0800", "qty": 50},
@@ -219,6 +233,19 @@ class ManualTests(unittest.TestCase):
         manual.merge_into(store, e)
         self.assertEqual(store.get(date(2026, 9, 27), "bp_dia"), 80)
         self.assertEqual(store.watch_days(), [])   # 手动补的值不算手表数据
+
+    def test_note_row_mentioning_date_is_not_header(self):
+        e = manual.parse("每天一行。日期写 2026-09-29 或 2026/9/29 都行,,,\n日期,体重(kg),收缩压,舒张压\n2026-09-28,68.6,150,96\n")
+        self.assertEqual(e[date(2026, 9, 28)]["bp_sys"], 150)
+
+    def test_month_day_dates_and_none_words(self):
+        w = []
+        e = manual.parse("日期,体重,症状\n9月27日,70.1,无\n9/28,70.0,咳嗽\n昨天,69,\n", ref=date(2026, 9, 29), warnings=w)
+        self.assertEqual(e[date(2026, 9, 27)], {"weight": 70.1})
+        self.assertEqual(e[date(2026, 9, 28)]["symptoms"], "咳嗽")
+        self.assertTrue(w)   # “昨天”看不懂，要提示
+        e = manual.parse("日期,体重\n12月31日,70\n", ref=date(2026, 1, 2))
+        self.assertIn(date(2025, 12, 31), e)
 
     def test_english_headers(self):
         e = manual.parse("date,weight,systolic,diastolic,mood\n2026-09-28,70,130,85,2\n")
