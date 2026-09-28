@@ -10,3 +10,9 @@ history-*
 weather.json
 calendar.json
 __pycache__/
+report.*
+brief.json
+summary.json
+subject.txt
+narrative.txt
+*.b64

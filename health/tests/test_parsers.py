@@ -307,18 +307,32 @@ class CollectTests(unittest.TestCase):
             # 小结果：对话记录里的 tool_result（结果本身是 JSON 字符串）
             inner = json.dumps({"content": b64, "id": "BBB222", "mimeType": "application/json",
                                 "title": "HealthAutoExport-2026-09-28.json"})
-            line = {"type": "user", "message": {"content": [{"type": "tool_result", "content": inner}]},
-                    "toolUseResult": inner}
+            call = {"type": "assistant", "message": {"content": [
+                {"type": "tool_use", "id": "toolu_1", "name": "mcp__Google_Drive__download_file_content"}]}}
+            line = {"type": "user", "message": {"content": [{"type": "tool_result", "tool_use_id": "toolu_1",
+                                                             "content": inner}]}, "toolUseResult": inner}
+            # 长得一样、但来自 Bash 的输出，不能当成下载结果
+            fake = {"type": "user", "message": {"content": [{"type": "tool_result", "tool_use_id": "toolu_bash",
+                                                             "content": inner.replace("BBB222", "FAKE00")}]}}
             old_line = dict(line, timestamp="2020-01-01T00:00:00.000Z",
                             toolUseResult=json.dumps({"content": b64, "id": "OLD999", "mimeType": "application/json",
                                                       "title": "HealthAutoExport-2020-01-01.json"}))
             old_line["message"] = {"content": []}
+            old_line["message"] = {"content": [{"type": "tool_result", "tool_use_id": "toolu_1", "content": ""}]}
             with open(os.path.join(proj, "sess.jsonl"), "w") as f:
-                f.write(json.dumps({"type": "other"}) + "\n" + json.dumps(old_line) + "\n" + json.dumps(line) + "\n")
+                for x in ({"type": "other"}, call, old_line, line, fake):
+                    f.write(json.dumps(x) + "\n")
             csv_b64 = base64.b64encode("日期,体重\n2026-09-28,70\n".encode()).decode()
+            csv_inner = json.dumps({"content": csv_b64, "id": "CCC333", "mimeType": "text/csv", "title": "健康手动记录"})
             with open(os.path.join(proj, "sess2.jsonl"), "w") as f:
-                f.write(json.dumps({"toolUseResult": json.dumps({"content": csv_b64, "id": "CCC333",
-                                                                  "mimeType": "text/csv", "title": "健康手动记录"})}) + "\n")
+                f.write(json.dumps({"message": {"content": [{"type": "tool_use", "id": "t2",
+                                                             "name": "mcp__Google_Drive__download_file_content"}]}}) + "\n")
+                f.write(json.dumps({"message": {"content": [{"type": "tool_result", "tool_use_id": "t2",
+                                                             "content": [{"type": "text", "text": csv_inner}]}]}}) + "\n")
+            # 子代理的记录不看
+            os.makedirs(os.path.join(proj, "sess", "subagents"))
+            with open(os.path.join(proj, "sess", "subagents", "agent-x.jsonl"), "w") as f:
+                f.write(json.dumps(call) + "\n" + json.dumps(line).replace("BBB222", "SUB000") + "\n")
             found = collect.scan(roots=[root], title_filter=r"HealthAutoExport|手动记录")
             self.assertEqual(set(found), {"AAA111", "BBB222", "CCC333"})
             out = os.path.join(root, "out")

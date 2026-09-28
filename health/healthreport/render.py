@@ -560,6 +560,7 @@ def build_brief(r):
         "date": r["date"],
         "data_state": r["data"].get("state"),
         "data_latest_day": r["data"].get("latest_day"),
+        "data_warnings": (r["data"].get("warnings") or [])[:5],
         "readiness": r.get("readiness"),
         "sleep": {k: r["sleep"].get(k) for k in ("which", "total_h", "start", "end", "deep_h", "rem_h",
                                                   "awake_h", "avg7_h", "short_nights7", "baseline_h")},

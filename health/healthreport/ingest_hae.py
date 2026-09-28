@@ -272,8 +272,8 @@ def _parse_workout(agg, w, tz):
                             duration_min=dur, kcal=kcal, distance_km=dist, avg_hr=avg_hr, max_hr=max_hr))
 
 
-def parse(obj, tz, source_name="Health Auto Export"):
-    """已经 json.load 的对象 → DayData。"""
+def parse(obj, tz, source_name="Health Auto Export", last_day=None):
+    """已经 json.load 的对象 → DayData。last_day 之后的数据会被丢弃。"""
     agg = Aggregator(source_name)
     metrics, workouts = _sections(obj)
     if not metrics and not workouts:
@@ -288,6 +288,8 @@ def parse(obj, tz, source_name="Health Auto Export"):
             _parse_workout(agg, w, tz)
         except Exception as e:
             agg.warnings.append(f"{source_name}: 解析体能训练失败：{e}")
+    if last_day is not None:
+        agg.drop_future(last_day)
     return agg.finish()
 
 
@@ -312,10 +314,10 @@ def looks_like_hae(obj):
     return isinstance(root, dict) and any(k in root for k in ("metrics", "workouts", "healthMetrics"))
 
 
-def load(path, tz):
+def load(path, tz, last_day=None):
     """读一个 JSON 文件；不是 Health Auto Export 格式时返回 None。"""
     with open(path, encoding="utf-8-sig") as f:
         obj = json.load(f)
     if not looks_like_hae(obj):
         return None
-    return parse(obj, tz, os.path.basename(path))
+    return parse(obj, tz, os.path.basename(path), last_day)

@@ -52,14 +52,14 @@ def _zip_jsons(path):
         return []
 
 
-def _parse_zip_jsons(path, tz):
+def _parse_zip_jsons(path, tz, today):
     out = []
     with zipfile.ZipFile(path) as z:
         for n in _zip_jsons(path):
             with z.open(n) as f:
                 obj = json.load(f)
             if ingest_hae.looks_like_hae(obj):
-                dd = ingest_hae.parse(obj, tz, os.path.basename(n))
+                dd = ingest_hae.parse(obj, tz, os.path.basename(n), last_day=today)
                 dd.primary_days = primary_days(n)
                 out.append(dd)
     return out
@@ -104,14 +104,14 @@ def load_store(paths, tz, today, log=print):
                     continue
             elif p.lower().endswith(".zip") and _zip_jsons(p):
                 # Health Auto Export 手动导出的压缩包：里面是 JSON
-                for dd in _parse_zip_jsons(p, tz):
+                for dd in _parse_zip_jsons(p, tz, today):
                     parsed.append(dd)
                     log(f"  读取 {name}/{dd.source_name}：{len(dd.values)} 天，{len(dd.sleep)} 晚睡眠")
                 continue
             elif p.lower().endswith((".zip", ".xml")):
                 dd = ingest_applexml.parse(p, tz, today=today)
             else:
-                dd = ingest_hae.load(p, tz)
+                dd = ingest_hae.load(p, tz, last_day=today)
                 if dd is None:
                     log(f"  跳过 {name}（不是 Health Auto Export 的 JSON）")
                     continue
@@ -126,6 +126,7 @@ def load_store(paths, tz, today, log=print):
     parsed.sort(key=lambda dd: (dd.latest is not None, dd.latest or datetime.min, dd.source_name))
     for dd in parsed:
         store.merge(dd)
+    store.files_tried = sum(1 for p in files if not p.lower().endswith(".csv"))
     return store, manual_files
 
 

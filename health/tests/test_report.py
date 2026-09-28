@@ -213,9 +213,14 @@ class ReviewRegressionTests(unittest.TestCase):
             r = run(s)
             self.assertFalse(titles(r, "red", "记录"), text)
             self.assertFalse(titles(r, "orange", "记录"), text)
-        s = store_for()
-        s.manual[TODAY - timedelta(days=1)] = {"symptoms": "咳嗽不止，胸痛"}
-        self.assertTrue(titles(run(s), "red", "记录"))
+        for text in ("咳嗽不止，胸痛", "非常胸闷", "不明原因胸痛", "没有胸痛但是胸闷", "头晕无力，呼吸困难"):
+            s = store_for()
+            s.manual[TODAY - timedelta(days=1)] = {"symptoms": text}
+            self.assertTrue(titles(run(s), "red", "记录"), text)
+        for text in ("无明显不适", "没什么不舒服", "否认胸痛"):
+            s = store_for()
+            s.manual[TODAY - timedelta(days=1)] = {"symptoms": text}
+            self.assertFalse([f for f in run(s)["findings"] if f["cat"] == "记录" and "不适" in f["title"]], text)
 
     def test_logged_period_relaxes_wrist_temp(self):
         s = store_for()

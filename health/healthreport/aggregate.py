@@ -54,6 +54,18 @@ class Aggregator:
         if dt is not None and (self.latest is None or dt > self.latest):
             self.latest = dt
 
+    def drop_future(self, last_day):
+        """丢掉日期在 last_day 之后的数据，也不让它们影响文件的合并顺序（防止伪造或错误的时间戳）。"""
+        for key in list(self.q):
+            for day in [d for d in self.q[key] if d > last_day]:
+                del self.q[key][day]
+        self.sleep_segments = [sg for sg in self.sleep_segments if sg[1].date() <= last_day]
+        self.sleep_summaries = [n for n in self.sleep_summaries if n.day <= last_day]
+        self.workouts = [w for w in self.workouts if w.day <= last_day]
+        stamps = [t for days in self.q.values() for es in days.values() for t, _, _ in es if t is not None]
+        stamps += [sg[1] for sg in self.sleep_segments] + [n.end for n in self.sleep_summaries if n.end]
+        self.latest = max(stamps) if stamps else None
+
     PLAUSIBLE = {"wrist_temp": (30, 40), "body_temp": (34, 43), "spo2": (50, 100), "rhr": (25, 200),
                  "hrv": (1, 400), "resp_rate": (4, 60)}
 

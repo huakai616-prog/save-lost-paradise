@@ -38,6 +38,12 @@ def _safe_name(title, file_id):
     return name
 
 
+def _content_items(obj):
+    msg = obj.get("message") if isinstance(obj, dict) else None
+    content = msg.get("content") if isinstance(msg, dict) else None
+    return [c for c in content if isinstance(c, dict)] if isinstance(content, list) else []
+
+
 def _line_time(obj):
     """会话记录每一行自带的 ISO 时间戳（UTC），没有就返回 None。"""
     ts = obj.get("timestamp") if isinstance(obj, dict) else None
@@ -79,24 +85,38 @@ def scan(roots=None, since_hours=24, title_filter=None):
                     consider(json.load(f), mt)
             except (ValueError, OSError):
                 continue
-        # 2) 小结果：会话记录里的 tool_result
+        # 2) 小结果：会话记录里的 tool_result。只认 download_file_content 这个工具调用的返回，
+        #    不看子代理的记录，也不看 Bash 输出之类恰好长得像的 JSON
         for p in glob.glob(os.path.join(root, "**", "*.jsonl"), recursive=True):
+            if f"{os.sep}subagents{os.sep}" in p:
+                continue
             mt = os.path.getmtime(p)
             if mt < cutoff:
                 continue
+            download_ids = set()
             try:
                 with open(p, encoding="utf-8") as f:
                     for i, line in enumerate(f):
-                        if "mimeType" not in line:   # 下载结果里一定有 mimeType
+                        if "download_file_content" not in line and "tool_result" not in line:
                             continue
                         try:
                             obj = json.loads(line)
                         except ValueError:
                             continue
+                        for item in _content_items(obj):
+                            if item.get("type") == "tool_use" and str(item.get("name", "")).endswith("download_file_content"):
+                                download_ids.add(item.get("id"))
+                        results = [it for it in _content_items(obj)
+                                   if it.get("type") == "tool_result" and it.get("tool_use_id") in download_ids]
+                        if not results:
+                            continue
                         ts = _line_time(obj)
                         if ts is not None and ts < cutoff:
                             continue   # 同一个会话每天都会运行，只要这次新下载的
-                        consider(obj, (ts or mt) + i * 1e-6)
+                        payload = [it.get("content") for it in results]
+                        if obj.get("toolUseResult") is not None:
+                            payload.append(obj["toolUseResult"])
+                        consider(payload, (ts or mt) + i * 1e-6)
             except OSError:
                 continue
     return found

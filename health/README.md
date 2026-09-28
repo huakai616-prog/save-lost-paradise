@@ -39,7 +39,7 @@ Apple Watch ──同步──▶ iPhone「健康」
 
 | 设置 | 选择 |
 |---|---|
-| 类型 | Google Drive（登录 huakai616@gmail.com，允许它创建文件） |
+| 类型 | Google Drive（登录你的 Google 账号，允许它创建文件） |
 | 文件夹名 | `metrics`（会出现在 Drive 的 `Health Auto Export/metrics/`） |
 | Data Type | Health Metrics |
 | Export Format | JSON，Export Version 选 **Version 2** |

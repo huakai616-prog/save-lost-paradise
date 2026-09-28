@@ -35,7 +35,8 @@ def dump(store, end_day, days=KEEP_DAYS):
         has = False
         for k in keys:
             v = store.get(d, k)
-            if v is None or (d, k) in store.manual_filled:
+            partial = d == end_day and METRICS[k].agg == "sum" and not k.startswith("sleep")
+            if v is None or (d, k) in store.manual_filled or partial:   # 当天的累计值还不完整，不存
                 row.append("")
                 continue
             has = True

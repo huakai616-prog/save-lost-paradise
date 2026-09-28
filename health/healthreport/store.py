@@ -68,6 +68,7 @@ class HealthStore:
         self.manual_filled = set()   # (day, key)：由手动记录补上的值
         self.sources = []
         self.warnings = []
+        self.files_tried = 0
 
     # ---- 写入 ----
     def merge(self, data: DayData):

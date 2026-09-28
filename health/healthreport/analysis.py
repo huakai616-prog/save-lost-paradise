@@ -14,6 +14,7 @@
 - 手腕温度：Health Auto Export 记在入睡那天，按昨晚的入睡日期找。
 """
 
+import re
 from datetime import datetime, time, timedelta
 from statistics import mean, median, pstdev
 
@@ -29,24 +30,43 @@ SHORT_TITLE = {"rhr": "静息心率比平时高", "hrv": "HRV 比平时低", "re
 # 记录里出现这些词时，不管手表数据如何都要提醒及时就医
 URGENT_SYMPTOMS = ("胸痛", "胸闷", "呼吸困难", "气短", "喘不上气", "憋气", "晕厥", "昏厥", "晕倒", "意识",
                    "口唇发紫", "嘴唇发紫", "言语不清", "说话不清", "口齿不清", "肢体无力", "半身", "口角歪斜",
-                   "剧烈头痛", "咳血", "便血", "黑便")
+                   "剧烈头痛", "咳血", "便血", "黑便", "无法呼吸", "透不过气")
 FEVER_WORDS = ("发烧", "发热", "高烧", "低烧")
 MEDICAL_CATS = ("体温", "心率", "呼吸", "血氧", "血压", "血糖")
-NEGATORS = ("无", "没", "不", "未", "否认", "非")
 NONE_TEXT = {"无", "没有", "没", "否", "不", "正常", "无症状", "none", "no", "-", "—", "/", "0"}
+# 否定词。后面跟这些字时不是否定：“无力、无法、不舒服、不明原因、不停、没力气、没胃口……”本身就是症状描述
+_NEG = re.compile(r"否认|未|无(?!力|法|精打采|聊)|没有?(?!力|劲|精神|胃口|法)|不(?!明|停|止|适|舒服|断|好|了|能|行|畅|退)")
+_CLAUSE_SPLIT = re.compile(r"[，,。；;、\s]+|但是|但|可是|不过")
+
+
+def _negation_start(clause):
+    """分句里否定词出现的位置；否定作用到分句结尾（“无胸闷胸痛”两个都算否定）。"""
+    m = _NEG.search(clause)
+    return m.start() if m else len(clause)
 
 
 def real_symptom_clauses(text):
-    """把症状描述按标点拆开，去掉“无胸痛”“没有发烧”“不发热”这类否定的分句。"""
-    import re
+    """去掉“无”“没有发烧”“无明显不适”这类整句否定，留下真正描述不适的分句。"""
     if not text or text.strip().lower() in NONE_TEXT:
         return []
-    clauses = [c.strip() for c in re.split(r"[，,。；;、\s]+", text) if c.strip()]
-    return [c for c in clauses if not c.startswith(NEGATORS) and c.lower() not in NONE_TEXT]
+    clauses = [c.strip() for c in _CLAUSE_SPLIT.split(text) if c and c.strip()]
+    return [c for c in clauses if _negation_start(c) > 0 and c.lower() not in NONE_TEXT]
 
 
 def symptom_hits(text, words):
-    return [w for w in words if any(w in c for c in real_symptom_clauses(text))]
+    """text 里没有被否定的关键词。"""
+    hits = []
+    for c in _CLAUSE_SPLIT.split(text or ""):
+        if not c:
+            continue
+        neg = _negation_start(c)
+        for w in words:
+            i = c.find(w)
+            while i >= 0:
+                if i < neg and w not in hits:
+                    hits.append(w)
+                i = c.find(w, i + 1)
+    return hits
 
 
 def finding(level, cat, title, detail="", advice=""):
@@ -110,7 +130,12 @@ class Analyzer:
         days = len(self.s.watch_days())
         st = {"latest_day": latest.isoformat() if latest else None, "days_available": days,
               "sources": self.s.sources, "warnings": list(self.s.warnings)}
-        if latest is None:
+        if latest is None and getattr(self.s, "files_tried", 0):
+            st["state"] = "none"
+            self.add("info", "数据", f"找到了 {self.s.files_tried} 个手表数据文件，但没能读出数据",
+                     "；".join(self.s.warnings[:3]) or "文件里没有可用的健康指标。",
+                     "检查 Health Auto Export 的导出格式是否为 JSON、是否勾选了健康指标；下载不完整时明天会自动重试。")
+        elif latest is None:
             st["state"] = "none"
             self.add("info", "数据", "还没有收到手表数据",
                      "Google Drive 里没有找到 Health Auto Export 导出的文件。",

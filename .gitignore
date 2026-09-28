@@ -1,0 +1,7 @@
+# 每日身体报告：任何健康数据都不能进这个公开仓库
+/data/
+/out/
+/weather.json
+/calendar.json
+HealthAutoExport*
+history-*
