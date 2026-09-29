@@ -120,8 +120,8 @@ def build(parts, lyrics):
     head_title = ("\\concat { \\override #'(font-name . \"" + CJK + "\") \"" + SD.TITLE + "\" "
                   "\\override #'(font-name . \"" + LATIN_IT + "\") \"   ·   Full Score\" }")
     footer = ("\\override #'(font-name . \"" + CJK + "\") \\abs-fontsize #8 "
-              "\\concat { \"编配 · 制谱　\" \\override #'(font-name . \"" + CJK_BOLD + "\") \"" + SD.ARRANGER + "\" "
-              "\"　　｜　　原唱 · 词曲　" + SD.SINGER + "\" }")
+              "\\concat { \"原唱 · 词曲　" + SD.SINGER + "　　｜　　编配 · 制谱　\" "
+              "\\override #'(font-name . \"" + CJK_BOLD + "\") \"" + SD.ARRANGER + "\" }")
     ly = rf'''\version "2.24.3"
 #(ly:font-config-add-directory "{FONT_DIR}")
 % 《{SD.TITLE}》 人声与弦乐四重奏 —— 编配 / 制谱：{SD.ARRANGER}

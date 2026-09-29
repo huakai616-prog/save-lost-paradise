@@ -59,7 +59,8 @@ VOICE = [
     r"fis'4 b8 fis'( e') e'4.\br",                                     # 27  心已憔悴，
     r"e'8 d' e' g' a' a' a' d'",                                       # 28  让风吹干受伤的眼
     r"d'8( e'~\> e'2.)",                                               # 29  泪。
-    r"R1\!", "R1", "R1", "R1", "R1",                                   # 30–34
+    r"R1\!", "R1", "R1", "R1",                                        # 30–33
+    r"r2 r4 r4\fermata",                                              # 34  延长记号与弦乐第 4 拍对齐
     r"R1\fermata",                                                     # 35
 ]
 
@@ -160,17 +161,17 @@ VIOLA = [
     r"g4( e') g( d')",                                                 # 15
     r"g4( e') a( d')",                                                 # 16
     r"c'4( e') fis( a)",                                               # 17
-    r"e8\p^{legato}( g c' g) d'( a fis a)",                             # 18  分解和弦始终在人声之下
+    r"g8\p^{legato}( e c' g) d'( a fis a)",                             # 18  分解和弦始终在人声之下
     r"a8( b fis b) e( g b g)",                                         # 19
     r"c'8( a e a) fis( b e' b)",                                       # 20
-    r"e8\<( g b g) g2",                                                # 21  让引子回声独白
+    r"g8\<( e b g) g2",                                                # 21  让引子回声独白
     r"g8\mp( c' e' c') fis( a d' a)",                                  # 22
     r"e'8( b g b) g( b d' b)",                                         # 23
     r"g8( c' e' c') a( b d' b)",                                       # 24
     r"g8( c' e' c') fis(\< a c' a)",                                   # 25
-    r"e8\mf( g c' g) d'( a fis a)",                                    # 26
+    r"g8\mf( e c' g) d'( a fis a)",                                    # 26
     r"a8( fis a fis) g( e g b)",                                       # 27
-    r"e8( g c' g) d'( a fis a)",                                       # 28
+    r"g8( e c' g) d'( a fis a)",                                       # 28
     r"e8\>( g c' g) e( g c' g)",                                       # 29
     r"g'2\p a'",                                                       # 30
     r"e'1",                                                            # 31

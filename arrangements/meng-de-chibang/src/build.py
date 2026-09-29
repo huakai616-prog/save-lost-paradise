@@ -9,7 +9,9 @@
 用法：cd src && python3 build.py
 """
 import os
+import re
 import subprocess
+import unicodedata
 import sys
 import tempfile
 
@@ -24,6 +26,26 @@ import mxml
 import score_data as SD
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+RADICAL_FIX = {"⻓": "长", "⻛": "风", "⻜": "飞", "⻅": "见", "⻔": "门", "⻢": "马"}
+
+
+def fix_tounicode(page):
+    """Chromium 的 Type3 中文字体把部分汉字映射成康熙部首（人→⼈）：修正文字层，保证可搜索、可复制。"""
+    for ref in page["/Resources"].get("/Font", {}).values():
+        font = ref.get_object()
+        tu = font.get("/ToUnicode")
+        if font.get("/Subtype") != "/Type3" or tu is None:
+            continue
+        tu = tu.get_object()
+        data = tu.get_data().decode("latin-1")
+
+        def rep(m):
+            ch = chr(int(m.group(2), 16))
+            n = RADICAL_FIX.get(ch) or unicodedata.normalize("NFKC", ch)
+            return m.group(1) + (f"<{ord(n):04X}>" if len(n) == 1 else f"<{m.group(2)}>")
+        new = re.sub(r"(<[0-9A-Fa-f]+>\s*)<(2[EF][0-9A-Fa-f]{2})>", rep, data)
+        if new != data:
+            tu.set_data(new.encode("latin-1"))
 OUT = os.path.dirname(HERE)
 NAME = SD.TITLE
 
@@ -54,6 +76,8 @@ def main():
     for nm in ("cover", "notes", "score"):
         for pg in pypdf.PdfReader(os.path.join(work, nm + ".pdf")).pages:
             w.add_page(pg)
+    for pg in w.pages[:2]:
+        fix_tounicode(pg)
     w.add_metadata({
         "/Title": f"{NAME} — 人声与弦乐四重奏 总谱",
         "/Author": f"编配、制谱：{SD.ARRANGER}",

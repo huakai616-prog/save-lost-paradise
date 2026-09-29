@@ -98,7 +98,9 @@ def note_xml(e, part, beams, acc_state, first_in_chord=True):
                 f'        <voice>1</voice>\n{ferm}      </note>\n']
     if e.kind == "rest":
         s = (f"      <note>\n        <rest/>\n        <duration>{dur}</duration>\n        <voice>1</voice>\n"
-             f"        <type>{TYPE_NAME[e.base]}</type>\n" + "        <dot/>\n" * e.dots + "      </note>\n")
+             f"        <type>{TYPE_NAME[e.base]}</type>\n" + "        <dot/>\n" * e.dots
+             + ('        <notations>\n          <fermata type="upright"/>\n        </notations>\n' if e.fermata else "")
+             + "      </note>\n")
         return [s]
     for pi, p in enumerate(e.pitches):
         s = "      <note>\n"
@@ -247,7 +249,7 @@ def build(parts, date="2026-09-28"):
     cr += credit(1, f"编配　{SD.ARRANGER}", right, round(top - t(44), 1), 11.5, justify="right", bold=True, ctype="arranger")
     cr += credit(1, f"制谱　{SD.ENGRAVER}", right, round(top - t(50), 1), 11.5, justify="right", bold=True)
     for pg in range(1, n_pages + 1):
-        cr += credit(pg, f"编配 · 制谱　{SD.ARRANGER}　　｜　　原唱 · 词曲　{SD.SINGER}",
+        cr += credit(pg, f"原唱 · 词曲　{SD.SINGER}　　｜　　编配 · 制谱　{SD.ARRANGER}",
                      cx, round(t(11), 1), 8, valign="bottom", ctype="rights" if pg == 1 else None)
         if pg > 1:
             cr += credit(pg, f"{SD.TITLE}   ·   Full Score", cx, top, 8.5, family=CJK)

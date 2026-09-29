@@ -137,6 +137,7 @@ h1 {{ font-family: "Noto Serif CJK SC", serif; font-weight: 700; font-size: 38pt
 .arr .k {{ font-size: 11pt; color: {GOLD}; letter-spacing: 0.5em; text-align: right; }}
 .arr .v {{ font-family: "Noto Serif CJK SC", serif; font-weight: 700; font-size: 19pt; letter-spacing: 0.3em;
            text-align: left; }}
+.arr .k .zh {{ margin-right: -0.5em; }}
 .arr .k .en {{ display: block; font-family: "EB Garamond", serif; font-style: italic; font-size: 8.5pt;
                letter-spacing: 0.06em; color: {MUTED}; margin-top: 0.8mm; }}
 .foot {{ position: absolute; bottom: 21mm; width: 100%; text-align: center; font-size: 9.5pt; font-style: italic;
@@ -157,8 +158,8 @@ h1 {{ font-family: "Noto Serif CJK SC", serif; font-weight: 700; font-size: 38pt
   <div class="credits">
     <div class="orig cjk">原唱　<b>{SD.SINGER}</b><span class="dot">·</span>词曲　<b>{SD.LYRICIST}</b></div>
     <div class="arr cjk">
-      <div class="k">编配<span class="en">Arranged by</span></div><div class="v">{SD.ARRANGER}</div>
-      <div class="k">制谱<span class="en">Engraved by</span></div><div class="v">{SD.ENGRAVER}</div>
+      <div class="k"><span class="zh">编配</span><span class="en">Arranged by</span></div><div class="v">{SD.ARRANGER}</div>
+      <div class="k"><span class="zh">制谱</span><span class="en">Engraved by</span></div><div class="v">{SD.ENGRAVER}</div>
     </div>
   </div>
   <div class="foot">{SD.TEMPO_TEXT} &nbsp;·&nbsp; ♩ = {SD.BPM} &nbsp;·&nbsp; ca. 1′50″</div>
@@ -222,20 +223,20 @@ ul, .grid {{ text-wrap: pretty; }}
     <div class="k">调性</div><div>e 小调（原曲简谱 1 = G）</div>
     <div class="k">人声音域</div><div>B3 – B4（女声实际音高，do = G3；主要音区 E4 – A4）</div>
     <div class="k">时长</div><div>约 1 分 50 秒</div>
-    <div class="k">结构</div><div>前奏（<span class="nw">第 1–9 小节</span>）→ 副歌 A · B · C（<span class="nw">第 10–29 小节</span>）→ 尾奏 D（<span class="nw">第 30–35 小节</span>）</div>
+    <div class="k">结构</div><div>前奏（<span class="nw">第 1–9 小节</span>）→ 副歌 A · B · C（<span class="nw">第 10–29 小节</span>）<span class="nw">→ 尾奏 D（第 30–35 小节）</span></div>
   </div>
 
   <h2>PERFORMANCE NOTES <span class="zh">演奏提示</span></h2>
   <ul class="cjk">
     <li>总谱为实际音高（Score in C），人声按女声实际音高记谱。
       <span class="en">Score in C. The voice is notated at sounding pitch.</span></li>
-    <li>前奏与尾奏取自原曲引子主题：先由大提琴、再由第一小提琴歌唱式奏出。
-      <span class="en">The introduction and coda quote the song’s original instrumental hook — first in the cello, then in Violin I.</span></li>
+    <li>前奏与尾奏取自原曲引子主题：前奏先由大提琴、再由第一小提琴奏出，尾奏则反之。
+      <span class="en">The intro and coda quote the song’s original hook — cello then Violin I in the intro, the reverse in the coda.</span></li>
     <li>弦乐始终以连贯、歌唱的线条为主，力度宁弱勿强，把空间留给人声；C 段高潮亦勿过响。
       <span class="en">Sempre cantabile; keep the strings beneath the voice. Even the climax at C should never cover the singer.</span></li>
     <li>中提琴的八分音符分解和弦请连贯演奏，像呼吸一样起伏。
       <span class="en">Viola arpeggios: legato, breathing with the phrase.</span></li>
-    <li>前奏铺底以 sul tasto 奏出，第 6 小节回到 ord.；第 28 小节最后一句 poco allarg.，第 30 小节 a tempo。
+    <li>前奏铺底以 sul tasto 奏出，第 6 小节回到 ord.；第 28 小节 poco allarg.，<span class="nw">第 30 小节 a tempo。</span>
       <span class="en">Intro pad sul tasto, ord. from bar 6; poco allarg. for the last vocal line (bar 28), a tempo at bar 30.</span></li>
     <li>第 34 小节渐慢，末小节 morendo，渐弱至无声。
       <span class="en">Rit. in bar 34; the final chord dies away (morendo) to nothing.</span></li>

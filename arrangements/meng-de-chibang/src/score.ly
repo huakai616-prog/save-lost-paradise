@@ -32,8 +32,8 @@
     \unless \on-first-page \abs-fontsize #8.5 \concat { \override #'(font-name . "Noto Serif CJK SC") "梦的翅膀受了伤" \override #'(font-name . "EB Garamond Italic") "   ·   Full Score" }
     \null
   }
-  oddFooterMarkup = \markup \fill-line { \override #'(font-name . "Noto Serif CJK SC") \abs-fontsize #8 \concat { "编配 · 制谱　" \override #'(font-name . "Noto Serif CJK SC Bold") "花开富贵" "　　｜　　原唱 · 词曲　蒋雪儿" } }
-  evenFooterMarkup = \markup \fill-line { \override #'(font-name . "Noto Serif CJK SC") \abs-fontsize #8 \concat { "编配 · 制谱　" \override #'(font-name . "Noto Serif CJK SC Bold") "花开富贵" "　　｜　　原唱 · 词曲　蒋雪儿" } }
+  oddFooterMarkup = \markup \fill-line { \override #'(font-name . "Noto Serif CJK SC") \abs-fontsize #8 \concat { "原唱 · 词曲　蒋雪儿　　｜　　编配 · 制谱　" \override #'(font-name . "Noto Serif CJK SC Bold") "花开富贵" } }
+  evenFooterMarkup = \markup \fill-line { \override #'(font-name . "Noto Serif CJK SC") \abs-fontsize #8 \concat { "原唱 · 词曲　蒋雪儿　　｜　　编配 · 制谱　" \override #'(font-name . "Noto Serif CJK SC Bold") "花开富贵" } }
 }
 
 \header {
@@ -118,7 +118,7 @@ voiceMusic = {
   R1 |  % 31
   R1 |  % 32
   R1 |  % 33
-  R1 |  % 34
+  r2 r4 r4\fermata |  % 34
   R1\fermata |  % 35
 }
 
@@ -220,17 +220,17 @@ viola = {
   g4( e'4) g4( d'4) |  % 15
   g4( e'4) a4( d'4) |  % 16
   c'4( e'4) fis4( a4) |  % 17
-  e8\p^\markup \italic "legato"( g8 c'8 g8) d'8( a8 fis8 a8) |  % 18
+  g8\p^\markup \italic "legato"( e8 c'8 g8) d'8( a8 fis8 a8) |  % 18
   a8( b8 fis8 b8) e8( g8 b8 g8) |  % 19
   c'8( a8 e8 a8) fis8( b8 e'8 b8) |  % 20
-  e8\<( g8 b8 g8) g2 |  % 21
+  g8\<( e8 b8 g8) g2 |  % 21
   g8\mp( c'8 e'8 c'8) fis8( a8 d'8 a8) |  % 22
   e'8( b8 g8 b8) g8( b8 d'8 b8) |  % 23
   g8( c'8 e'8 c'8) a8( b8 d'8 b8) |  % 24
   g8( c'8 e'8 c'8) fis8\<( a8 c'8 a8) |  % 25
-  e8\mf( g8 c'8 g8) d'8( a8 fis8 a8) |  % 26
+  g8\mf( e8 c'8 g8) d'8( a8 fis8 a8) |  % 26
   a8( fis8 a8 fis8) g8( e8 g8 b8) |  % 27
-  e8( g8 c'8 g8) d'8( a8 fis8 a8) |  % 28
+  g8( e8 c'8 g8) d'8( a8 fis8 a8) |  % 28
   e8\>( g8 c'8 g8) e8( g8 c'8 g8) |  % 29
   g'2\p a'2 |  % 30
   e'1 |  % 31

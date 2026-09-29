@@ -116,6 +116,7 @@ def merged_notes(events):
             prev = out[-1]
             prev["dur"] += e.dur
             prev["tail"] = e
+            prev["fermata"] = prev["fermata"] or e.fermata
             if e.slur_stop:
                 prev["slur_end"] = True
                 in_slur = False
