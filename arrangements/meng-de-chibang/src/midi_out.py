@@ -13,10 +13,12 @@ LEVEL = model.DYN_LEVEL
 # 速度图（单位：四分音符, BPM）。第 34 小节 rit.，34 小节末拍与 35 小节为延长记号。
 TEMPO_MAP = [
     (F(0), SD.BPM),
+    (F(27 * 4), 78), (F(27 * 4 + 2), 75), (F(28 * 4), 72),      # 28–29：poco allarg.（最后一句）
+    (F(29 * 4), SD.BPM),                                        # 30：a tempo
     (F(33 * 4) + 0, 76), (F(33 * 4) + 1, 72), (F(33 * 4) + 2, 66), (F(33 * 4) + 3, 44),
     (F(34 * 4), 50),
 ]
-MARKERS = [(1, "Intro 前奏"), (10, "A 副歌"), (18, "B"), (26, "C 高潮"), (30, "D 尾奏")]
+MARKERS = [(1, "Intro"), (10, "A - Chorus"), (18, "B"), (26, "C - Climax"), (30, "D - Coda")]
 
 
 def tick(q):
@@ -44,7 +46,7 @@ def to_track(abs_events, tr=None):
     def order(item):
         t, m = item
         if m.is_meta:
-            k = 0 if m.type != "end_of_track" else 9
+            k = {"end_of_track": 9, "lyrics": 2.5}.get(m.type, 0)   # 歌词紧贴自己的 note_on
         elif m.type == "control_change" or m.type == "program_change":
             k = 1
         elif m.type == "note_off" or (m.type == "note_on" and m.velocity == 0):
@@ -90,7 +92,7 @@ def dynamic_curve(events):
 def level_at(pts, t):
     if not pts:
         return 3.0
-    if t <= pts[0][0]:
+    if t < pts[0][0]:
         return pts[0][1]
     for (t0, l0), (t1, l1) in zip(pts, pts[1:]):
         if t0 <= t < t1:
@@ -149,28 +151,37 @@ def string_track(part):
         lv = level_at(pts, q)
         if q >= F(34 * 4):                         # 最后一小节 morendo → niente
             frac = float((q - F(34 * 4)) / 4)
-            lv = lv - 2.2 * frac
+            lv = lv - 4.0 * frac ** 1.5
         val = max(20, min(127, round(62 + lv * 10)))
         if val != last:
             ab.append((tick(q), mido.Message("control_change", channel=ch, control=11, value=val)))
             last = val
-        q += F(1, 2)
+        q += F(1, 4) if q >= F(34 * 4) else F(1, 2)
     for i, n in enumerate(notes):
         st = tick(n["start"])
         full = tick(n["dur"])
         legato = n["in_slur"] and not n["slur_end"]
         nxt = notes[i + 1] if i + 1 < len(notes) else None
-        if legato and nxt and tick(nxt["start"]) == st + full:
+        joined = nxt is not None and tick(nxt["start"]) == st + full
+        if legato and joined:
             ln = full + (10 if nxt["pitches"] != n["pitches"] else -10)
         elif n["fermata"] or n["start"] + n["dur"] >= end_q:
             ln = full
-        else:
+        elif joined:                               # 分弓后紧接下一音：只留换弓空隙
+            ln = full - (20 if full >= TPQ else 30)
+        else:                                      # 后面是休止：自然收弓
             ln = max(full - max(30, full // 12), full // 2)
         lv = level_at(pts, n["start"])
-        vel = round(38 + lv * 11)
-        if not n["in_slur"] or (i > 0 and not notes[i - 1]["in_slur"]):
-            vel += 3
-        vel = max(1, min(127, vel))
+        vel = 38 + lv * 11
+        if not n["in_slur"]:
+            vel += 3                               # 分弓：清楚的起音
+        elif n["ev"].slur_start:
+            vel += 4                               # 圆滑线首音
+        elif n["slur_end"] and full >= TPQ:
+            vel -= 8                               # 长的圆滑线尾音：叹息
+        else:
+            vel -= 4                               # 圆滑线内部
+        vel = max(1, min(127, round(vel)))
         for pch in n["pitches"]:
             ab.append((st, mido.Message("note_on", channel=ch, note=pch, velocity=vel)))
             ab.append((st + ln, mido.Message("note_off", channel=ch, note=pch, velocity=0)))
@@ -180,7 +191,7 @@ def string_track(part):
 
 def write_strings(parts, path):
     mf = mido.MidiFile(type=1, ticks_per_beat=TPQ, charset="utf-8")
-    mf.tracks.append(conductor_track(f"{SD.TITLE} — 弦乐四重奏（编配：{SD.ARRANGER}）"))
+    mf.tracks.append(conductor_track("Meng De Chi Bang Shou Le Shang - String Quartet"))
     for p in parts:
         if p["key"] != "voice":
             mf.tracks.append(string_track(p))
@@ -224,9 +235,9 @@ def vocal_notes(part):
 
 def write_vocal(part, path):
     mf = mido.MidiFile(type=1, ticks_per_beat=TPQ, charset="utf-8")
-    mf.tracks.append(conductor_track(f"{SD.TITLE} — 人声（带歌词）"))
+    mf.tracks.append(conductor_track("Meng De Chi Bang Shou Le Shang - Vocal"))
     ch = part["channel"]
-    ab = [(0, mido.MetaMessage("track_name", name="Voice 人声")),
+    ab = [(0, mido.MetaMessage("track_name", name="Voice")),
           (0, mido.MetaMessage("instrument_name", name="Voice")),
           (0, mido.Message("program_change", channel=ch, program=part["program"])),
           (0, mido.Message("control_change", channel=ch, control=7, value=100))]

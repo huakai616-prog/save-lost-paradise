@@ -41,7 +41,8 @@ def main():
                     problems.append(f"音域  {p['name']} 第{e.bar}小节 {nm(q.midi)}")
 
     strings = ["vn1", "vn2", "va", "vc"]
-    for a, b in combinations(strings, 2):
+    pairs = list(combinations(strings, 2)) + [("voice", k) for k in strings]
+    for a, b in pairs:
         ea, eb = by[a]["events"], by[b]["events"]
         times = sorted(set(onsets(ea)) | set(onsets(eb)))
         prev = None
@@ -55,7 +56,9 @@ def main():
                 if px != x and py != y:
                     iv0, iv1 = abs(px - py) % 12, abs(x - y) % 12
                     same_dir = (x - px) * (y - py) > 0
-                    if same_dir and iv0 == iv1 and iv0 in (0, 7):
+                    # 允许：小提琴 I 在高八度加厚人声旋律（流行弦乐常规写法）
+                    doubling = a == "voice" and b == "vn1" and iv0 == 0
+                    if same_dir and iv0 == iv1 and iv0 in (0, 7) and not doubling:
                         bar = int(t // 4) + 1
                         beat = t % 4 + 1
                         kind = "八度" if iv0 == 0 else "五度"
@@ -63,6 +66,22 @@ def main():
                             f"平行{kind} {by[a]['name']}/{by[b]['name']} 第{bar}小节第{float(beat):g}拍 "
                             f"{nm(px)}-{nm(py)} → {nm(x)}-{nm(y)}")
             prev = (x, y)
+
+    # 外声部（小提琴 I 最高音 / 大提琴）隐伏八度：同向进入八度且高声部跳进
+    ea, eb = by["vn1"]["events"], by["vc"]["events"]
+    times = sorted(set(onsets(ea)) | set(onsets(eb)))
+    prev = None
+    for t in times:
+        x, y = sounding(ea, t), sounding(eb, t)
+        if x is None or y is None:
+            prev = None
+            continue
+        if prev:
+            px, py = prev
+            if px != x and py != y and (x - px) * (y - py) > 0 and abs(x - y) % 12 == 0 \
+                    and abs(px - py) % 12 != 0 and abs(x - px) > 2:
+                problems.append(f"隐伏八度 外声部 第{int(t // 4) + 1}小节 {nm(px)}-{nm(py)} → {nm(x)}-{nm(y)}")
+        prev = (x, y)
 
     # 人声与弦乐：同时持续 ≥ 一拍的小二度 / 小九度
     ve = by["voice"]["events"]

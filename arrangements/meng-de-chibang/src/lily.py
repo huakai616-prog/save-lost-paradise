@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 """事件模型 → LilyPond 源文件（出版级总谱排版）。"""
+import os
+
+import model
 import score_data as SD
+
+FONT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts")
 
 CJK = "Noto Serif CJK SC"
 CJK_BOLD = "Noto Serif CJK SC Bold"
@@ -41,13 +46,10 @@ def ev_to_ly(e):
 
 
 def part_music(events):
-    lines, cur, bar = [], [], 1
-    for e in events:
-        if e.bar != bar:
-            lines.append("  " + " ".join(cur) + f" |  % {bar}")
-            cur, bar = [], e.bar
-        cur.append(ev_to_ly(e))
-    lines.append("  " + " ".join(cur) + f" |  % {bar}")
+    lines = []
+    for evs in model.bars_of(events):
+        body = " ".join(ev_to_ly(e) for e in model.display_bar(evs))
+        lines.append(f"  {body} |  % {evs[0].bar}")
     return "\n".join(lines)
 
 
@@ -58,13 +60,12 @@ def marks_track():
         if b in SD.SYSTEM_STARTS and b > 1:
             pre.append("\\pageBreak" if b in SD.PAGE_STARTS else "\\break")
         if b == 1:
-            pre.append(f'\\tempo \\markup {{ \\override #\'(font-name . "{LATIN} Bold") '
-                       f'\\abs-fontsize #12 "{SD.TEMPO_TEXT}" }} 4 = {SD.BPM}')
+            pre.append(f'\\tempo \\markup {{ \\abs-fontsize #12.5 \\bold "{SD.TEMPO_TEXT}" }} 4 = {SD.BPM}')
         if b in SD.REHEARSAL:
             pre.append("\\mark \\default")
         spacer = "s1"
         if b in SD.TEXT_MARKS:
-            spacer += f'^\\markup {{ \\override #\'(font-name . "{LATIN_IT}") \\abs-fontsize #11 "{SD.TEXT_MARKS[b]}" }}'
+            spacer += f'^\\markup {{ \\abs-fontsize #11 \\italic "{SD.TEXT_MARKS[b]}" }}'
         post = []
         if b in SD.DOUBLE_BAR_AFTER:
             post.append('\\bar "||"')
@@ -122,6 +123,7 @@ def build(parts, lyrics):
               "\\concat { \"编配 · 制谱　\" \\override #'(font-name . \"" + CJK_BOLD + "\") \"" + SD.ARRANGER + "\" "
               "\"　　｜　　原唱 · 词曲　" + SD.SINGER + "\" }")
     ly = rf'''\version "2.24.3"
+#(ly:font-config-add-directory "{FONT_DIR}")
 % 《{SD.TITLE}》 人声与弦乐四重奏 —— 编配 / 制谱：{SD.ARRANGER}
 % 本文件由 src/build.py 自动生成，请修改 src/score_data.py 后重新生成。
 
@@ -135,12 +137,12 @@ def build(parts, lyrics):
   right-margin = 14\mm
   indent = 24\mm
   short-indent = 11\mm
-  property-defaults.fonts.serif = "{LATIN}, {CJK}"
+  #(define fonts (set-global-fonts #:roman "{LATIN}, {CJK}" #:sans "{LATIN}, {CJK}" #:factor (/ staff-height pt 20)))
   ragged-last-bottom = ##f
   ragged-bottom = ##f
-  system-separator-markup = \slashSeparator
+  system-separator-markup = \markup \center-align \vcenter \combine \beam #2.4 #0.5 #0.34 \raise #1.25 \beam #2.4 #0.5 #0.34
   markup-system-spacing = #'((basic-distance . 10) (minimum-distance . 6) (padding . 3) (stretchability . 12))
-  system-system-spacing = #'((basic-distance . 20) (minimum-distance . 14) (padding . 6) (stretchability . 60))
+  system-system-spacing = #'((basic-distance . 22) (minimum-distance . 16) (padding . 8) (stretchability . 25))
   top-system-spacing = #'((basic-distance . 6) (minimum-distance . 2) (padding . 2))
   last-bottom-spacing = #'((basic-distance . 6) (minimum-distance . 2) (padding . 2) (stretchability . 30))
   print-first-page-number = ##f
@@ -166,9 +168,6 @@ global = {{
   \key e \minor
   \numericTimeSignature
   \time 4/4
-  \set Timing.beamExceptions = #'()
-  \set Timing.baseMoment = #(ly:make-moment 1/4)
-  \set Timing.beatStructure = 1,1,1,1
 }}
 
 marks = {{
@@ -208,7 +207,13 @@ cello = {{
       shortInstrumentName = "V."
     }} <<
       \marks
-      \new Voice = "vox" {{ \global \dynamicUp \voiceMusic }}
+      \new Voice = "vox" {{
+        \global
+        \set Staff.beamExceptions = #'()
+        \set Staff.baseMoment = #(ly:make-moment 1/4)
+        \set Staff.beatStructure = 1,1,1,1
+        \dynamicUp \voiceMusic
+      }}
     >>
     \new Lyrics \lyricsto "vox" \lyricText
     \new StaffGroup <<
@@ -230,10 +235,15 @@ cello = {{
       rehearsalMarkFormatter = #format-mark-box-alphabet
       \override RehearsalMark.font-size = #2.2
       \override RehearsalMark.font-series = #'bold
-      \override RehearsalMark.padding = #2.2
+      \override RehearsalMark.padding = #1.2
+      \override RehearsalMark.outside-staff-horizontal-padding = #1.5
+      \override RehearsalMark.break-align-symbols = #'(staff-bar clef)
       \override RehearsalMark.self-alignment-X = #CENTER
       \override BarNumber.font-shape = #'italic
-      \override BarNumber.font-size = #-0.5
+      \override BarNumber.font-size = #0.5
+      \override BarNumber.font-features = #'("lnum")
+      \override MetronomeMark.font-features = #'("lnum")
+      \override MetronomeMark.font-size = #1.5
       \override BarNumber.padding = #2.5
       \override MetronomeMark.padding = #2.5
       \override SpacingSpanner.base-shortest-duration = #(ly:make-moment 1/16)
@@ -242,7 +252,7 @@ cello = {{
     }}
     \context {{
       \Staff
-      \override InstrumentName.font-size = #0.8
+      \override InstrumentName.font-size = #1.6
       \override InstrumentName.padding = #1.2
       \override TextScript.padding = #1.0
       \override DynamicLineSpanner.padding = #1.2
@@ -257,7 +267,7 @@ cello = {{
     }}
     \context {{
       \StaffGroup
-      \override StaffGrouper.staff-staff-spacing = #'((basic-distance . 11) (minimum-distance . 8) (padding . 2) (stretchability . 5))
+      \override StaffGrouper.staff-staff-spacing = #'((basic-distance . 12) (minimum-distance . 9) (padding . 2.5) (stretchability . 40))
     }}
   }}
 }}

@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """封面 + 说明页（HTML → Chromium 打印 PDF）。"""
 import math
+import os
 import subprocess
 
 import score_data as SD
 
 CHROME = "/opt/pw-browsers/chromium-1194/chrome-linux/chrome"
+FONT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts")
 
 INK = "#1b2130"
 GOLD = "#9a7a43"
@@ -70,29 +72,38 @@ def feather_svg():
                 f'<path d="M {sx:.2f},{sy:.2f} Q {cx_:.2f},{cy_:.2f} {ex:.2f},{ey:.2f}" '
                 f'stroke="{GOLD_SOFT}" stroke-width="0.22" fill="none" opacity="{op:.2f}" stroke-linecap="round"/>')
     # 羽根处的绒羽（细、短、柔）
-    for k in range(14):
-        t = 0.045 + 0.009 * k
+    for k in range(6):
+        t = 0.06 + 0.014 * k
         sx, sy = shaft(t)
         for side in (-1, 1):
-            ln = 3.2 + 2.6 * math.sin(math.pi * k / 14)
+            ln = 2.0 + 1.4 * math.sin(math.pi * k / 6)
             ex = sx + side * ln * 0.92
             ey = sy - ln * 0.55
             parts.append(
                 f'<path d="M {sx:.2f},{sy:.2f} Q {sx + side * ln * 0.35:.2f},{sy - 0.2:.2f} {ex:.2f},{ey:.2f}" '
-                f'stroke="{GOLD_SOFT}" stroke-width="0.16" fill="none" opacity="0.42" stroke-linecap="round"/>')
+                f'stroke="{GOLD_SOFT}" stroke-width="0.16" fill="none" opacity="0.30" stroke-linecap="round"/>')
     body = "\n".join(parts)
     return (f'<svg viewBox="-40 -128 80 140" width="70mm" height="122.5mm" xmlns="http://www.w3.org/2000/svg">'
             f'<g transform="rotate(-24 0 -60)">{body}</g></svg>')
 
 
-BASE_CSS = f"""
+def _face(file, weight, style):
+    return (f'@font-face {{ font-family: "EB Garamond"; src: url("file://{FONT_DIR}/{file}"); '
+            f'font-weight: {weight}; font-style: {style}; }}')
+
+
+FACES = "\n".join([_face("EBGaramond-Regular.ttf", 400, "normal"), _face("EBGaramond-Italic.ttf", 400, "italic"),
+                   _face("EBGaramond-SemiBold.ttf", 600, "normal"), _face("EBGaramond-Bold.ttf", 700, "normal"),
+                   _face("EBGaramond-SemiBoldItalic.ttf", 600, "italic")])
+
+BASE_CSS = FACES + f"""
 @page {{ size: A4; margin: 0; }}
 * {{ box-sizing: border-box; margin: 0; padding: 0; }}
 html, body {{ width: 210mm; height: 297mm; }}
 body {{ font-family: "EB Garamond", "Noto Serif CJK SC", serif; color: {INK};
        font-variant-numeric: lining-nums;
        -webkit-print-color-adjust: exact; print-color-adjust: exact; }}
-.cjk {{ font-family: "Noto Serif CJK SC", serif; }}
+.cjk {{ font-family: "EB Garamond", "Noto Serif CJK SC", serif; }}
 """
 
 
@@ -121,13 +132,13 @@ h1 {{ font-family: "Noto Serif CJK SC", serif; font-weight: 700; font-size: 38pt
 .orig {{ font-size: 10.5pt; color: {MUTED}; letter-spacing: 0.12em; }}
 .orig b {{ font-weight: 400; color: {INK}; }}
 .dot {{ color: {GOLD}; margin: 0 3.2mm; }}
-.arr {{ margin-top: 8mm; display: inline-grid; grid-template-columns: auto auto; column-gap: 7mm; row-gap: 3.2mm;
-        align-items: baseline; }}
+.arr {{ margin-top: 8mm; display: inline-grid; grid-template-columns: auto auto; column-gap: 7mm; row-gap: 3.6mm;
+        align-items: center; }}
 .arr .k {{ font-size: 11pt; color: {GOLD}; letter-spacing: 0.5em; text-align: right; }}
 .arr .v {{ font-family: "Noto Serif CJK SC", serif; font-weight: 700; font-size: 19pt; letter-spacing: 0.3em;
            text-align: left; }}
-.arr .en {{ display: block; font-family: "EB Garamond", serif; font-style: italic; font-weight: 400; font-size: 8.5pt;
-            letter-spacing: 0.06em; color: {MUTED}; margin-top: 0.6mm; }}
+.arr .k .en {{ display: block; font-family: "EB Garamond", serif; font-style: italic; font-size: 8.5pt;
+               letter-spacing: 0.06em; color: {MUTED}; margin-top: 0.8mm; }}
 .foot {{ position: absolute; bottom: 21mm; width: 100%; text-align: center; font-size: 9.5pt; font-style: italic;
          color: {MUTED}; letter-spacing: 0.05em; }}
 </style></head><body><div class="page">
@@ -146,8 +157,8 @@ h1 {{ font-family: "Noto Serif CJK SC", serif; font-weight: 700; font-size: 38pt
   <div class="credits">
     <div class="orig cjk">原唱　<b>{SD.SINGER}</b><span class="dot">·</span>词曲　<b>{SD.LYRICIST}</b></div>
     <div class="arr cjk">
-      <div class="k">编配</div><div class="v">{SD.ARRANGER}<span class="en">Arranged by</span></div>
-      <div class="k">制谱</div><div class="v">{SD.ENGRAVER}<span class="en">Engraved by</span></div>
+      <div class="k">编配<span class="en">Arranged by</span></div><div class="v">{SD.ARRANGER}</div>
+      <div class="k">制谱<span class="en">Engraved by</span></div><div class="v">{SD.ENGRAVER}</div>
     </div>
   </div>
   <div class="foot">{SD.TEMPO_TEXT} &nbsp;·&nbsp; ♩ = {SD.BPM} &nbsp;·&nbsp; ca. 1′50″</div>
@@ -187,7 +198,10 @@ ul {{ list-style: none; font-size: 10pt; line-height: 1.6; }}
 li {{ padding-left: 5mm; position: relative; margin-bottom: 1.6mm; }}
 li::before {{ content: ""; position: absolute; left: 0; top: 2.6mm; width: 1.4mm; height: 1.4mm;
               transform: rotate(45deg); background: {GOLD_SOFT}; }}
-li .en {{ display: block; font-style: italic; color: {MUTED}; font-size: 9.5pt; line-height: 1.4; }}
+li .en {{ display: block; font-family: "EB Garamond", serif; font-style: italic; color: {MUTED}; font-size: 10.5pt;
+          line-height: 1.4; }}
+ul, .grid {{ text-wrap: pretty; }}
+.nw {{ white-space: nowrap; }}
 .credits {{ position: absolute; bottom: 16mm; left: 28mm; right: 28mm; border-top: 0.2mm solid {GOLD};
             padding-top: 5mm; display: flex; justify-content: space-between; font-size: 10pt; }}
 .credits b {{ font-family: "Noto Serif CJK SC", serif; font-weight: 700; letter-spacing: 0.15em; }}
@@ -206,8 +220,9 @@ li .en {{ display: block; font-style: italic; color: {MUTED}; font-size: 9.5pt; 
   <div class="grid cjk">
     <div class="k">速度</div><div><i style="font-family:'EB Garamond'">{SD.TEMPO_TEXT}</i>，♩ = {SD.BPM}</div>
     <div class="k">调性</div><div>e 小调（原曲简谱 1 = G）</div>
+    <div class="k">人声音域</div><div>B3 – B4（女声实际音高，do = G3；主要音区 E4 – A4）</div>
     <div class="k">时长</div><div>约 1 分 50 秒</div>
-    <div class="k">结构</div><div>前奏（第 1–9 小节）→ 副歌 A · B · C（第 10–29 小节）→ 尾奏 D（第 30–35 小节）</div>
+    <div class="k">结构</div><div>前奏（<span class="nw">第 1–9 小节</span>）→ 副歌 A · B · C（<span class="nw">第 10–29 小节</span>）→ 尾奏 D（<span class="nw">第 30–35 小节</span>）</div>
   </div>
 
   <h2>PERFORMANCE NOTES <span class="zh">演奏提示</span></h2>
@@ -216,10 +231,12 @@ li .en {{ display: block; font-style: italic; color: {MUTED}; font-size: 9.5pt; 
       <span class="en">Score in C. The voice is notated at sounding pitch.</span></li>
     <li>前奏与尾奏取自原曲引子主题：先由大提琴、再由第一小提琴歌唱式奏出。
       <span class="en">The introduction and coda quote the song’s original instrumental hook — first in the cello, then in Violin I.</span></li>
-    <li>弦乐始终以连贯、歌唱的线条为主，力度宁弱勿强，把空间留给人声；高潮（C 段）亦不宜过响。
+    <li>弦乐始终以连贯、歌唱的线条为主，力度宁弱勿强，把空间留给人声；C 段高潮亦勿过响。
       <span class="en">Sempre cantabile; keep the strings beneath the voice. Even the climax at C should never cover the singer.</span></li>
     <li>中提琴的八分音符分解和弦请连贯演奏，像呼吸一样起伏。
       <span class="en">Viola arpeggios: legato, breathing with the phrase.</span></li>
+    <li>前奏铺底以 sul tasto 奏出，第 6 小节回到 ord.；第 28 小节最后一句 poco allarg.，第 30 小节 a tempo。
+      <span class="en">Intro pad sul tasto, ord. from bar 6; poco allarg. for the last vocal line (bar 28), a tempo at bar 30.</span></li>
     <li>第 34 小节渐慢，末小节 morendo，渐弱至无声。
       <span class="en">Rit. in bar 34; the final chord dies away (morendo) to nothing.</span></li>
   </ul>

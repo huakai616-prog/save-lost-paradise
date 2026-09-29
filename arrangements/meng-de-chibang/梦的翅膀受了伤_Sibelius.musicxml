@@ -47,6 +47,10 @@
       </system-margins>
       <system-distance>179.1</system-distance>
       <top-system-distance>83.6</top-system-distance>
+      <system-dividers>
+        <left-divider print-object="yes" halign="left" valign="bottom"/>
+        <right-divider print-object="no"/>
+      </system-dividers>
     </system-layout>
     <staff-layout>
       <staff-distance>65.7</staff-distance>
@@ -55,11 +59,11 @@
     <lyric-font font-family="Noto Serif CJK SC" font-size="11"/>
   </defaults>
   <credit page="1">
-    <credit-words default-x="626.9" default-y="1701.5" justify="center" valign="top" font-family="EB Garamond" font-size="8.5" letter-spacing="0.5">FULL SCORE</credit-words>
+    <credit-words default-x="626.9" default-y="1701.5" justify="center" valign="top" font-family="EB Garamond" font-size="8.5">F U L L    S C O R E</credit-words>
   </credit>
   <credit page="1">
     <credit-type>title</credit-type>
-    <credit-words default-x="626.9" default-y="1653.7" justify="center" valign="top" font-family="Noto Serif CJK SC" font-size="25" font-weight="bold" letter-spacing="0.12">梦的翅膀受了伤</credit-words>
+    <credit-words default-x="626.9" default-y="1653.7" justify="center" valign="top" font-family="Noto Serif CJK SC" font-size="25" font-weight="bold">梦 的 翅 膀 受 了 伤</credit-words>
   </credit>
   <credit page="1">
     <credit-type>subtitle</credit-type>
@@ -67,7 +71,7 @@
   </credit>
   <credit page="1">
     <credit-type>subtitle</credit-type>
-    <credit-words default-x="626.9" default-y="1540.3" justify="center" valign="top" font-family="Noto Serif CJK SC" font-size="10">为人声与弦乐四重奏而作</credit-words>
+    <credit-words default-x="626.9" default-y="1540.3" justify="center" valign="top" font-family="Noto Serif CJK SC" font-size="10">人声与弦乐四重奏版</credit-words>
   </credit>
   <credit page="1">
     <credit-words default-x="101.5" default-y="1474.6" justify="left" valign="top" font-family="Noto Serif CJK SC" font-size="10.5">原唱　蒋雪儿</credit-words>
@@ -85,22 +89,22 @@
   </credit>
   <credit page="1">
     <credit-type>rights</credit-type>
-    <credit-words default-x="626.9" default-y="35.8" justify="center" valign="bottom" font-family="Noto Serif CJK SC" font-size="8">编配 · 制谱　花开富贵　　｜　　原唱 · 词曲　蒋雪儿</credit-words>
+    <credit-words default-x="626.9" default-y="65.7" justify="center" valign="bottom" font-family="Noto Serif CJK SC" font-size="8">编配 · 制谱　花开富贵　　｜　　原唱 · 词曲　蒋雪儿</credit-words>
   </credit>
   <credit page="2">
-    <credit-words default-x="626.9" default-y="35.8" justify="center" valign="bottom" font-family="Noto Serif CJK SC" font-size="8">编配 · 制谱　花开富贵　　｜　　原唱 · 词曲　蒋雪儿</credit-words>
+    <credit-words default-x="626.9" default-y="65.7" justify="center" valign="bottom" font-family="Noto Serif CJK SC" font-size="8">编配 · 制谱　花开富贵　　｜　　原唱 · 词曲　蒋雪儿</credit-words>
   </credit>
   <credit page="2">
     <credit-words default-x="626.9" default-y="1701.5" justify="center" valign="top" font-family="Noto Serif CJK SC" font-size="8.5">梦的翅膀受了伤   ·   Full Score</credit-words>
   </credit>
   <credit page="3">
-    <credit-words default-x="626.9" default-y="35.8" justify="center" valign="bottom" font-family="Noto Serif CJK SC" font-size="8">编配 · 制谱　花开富贵　　｜　　原唱 · 词曲　蒋雪儿</credit-words>
+    <credit-words default-x="626.9" default-y="65.7" justify="center" valign="bottom" font-family="Noto Serif CJK SC" font-size="8">编配 · 制谱　花开富贵　　｜　　原唱 · 词曲　蒋雪儿</credit-words>
   </credit>
   <credit page="3">
     <credit-words default-x="626.9" default-y="1701.5" justify="center" valign="top" font-family="Noto Serif CJK SC" font-size="8.5">梦的翅膀受了伤   ·   Full Score</credit-words>
   </credit>
   <credit page="4">
-    <credit-words default-x="626.9" default-y="35.8" justify="center" valign="bottom" font-family="Noto Serif CJK SC" font-size="8">编配 · 制谱　花开富贵　　｜　　原唱 · 词曲　蒋雪儿</credit-words>
+    <credit-words default-x="626.9" default-y="65.7" justify="center" valign="bottom" font-family="Noto Serif CJK SC" font-size="8">编配 · 制谱　花开富贵　　｜　　原唱 · 词曲　蒋雪儿</credit-words>
   </credit>
   <credit page="4">
     <credit-words default-x="626.9" default-y="1701.5" justify="center" valign="top" font-family="Noto Serif CJK SC" font-size="8.5">梦的翅膀受了伤   ·   Full Score</credit-words>
@@ -208,7 +212,7 @@
           <line>2</line>
         </clef>
       </attributes>
-      <direction placement="above">
+      <direction placement="above" system="only-top">
         <direction-type><words font-family="EB Garamond" font-weight="bold" font-size="12">Andante mesto</words></direction-type>
         <direction-type><metronome parentheses="yes"><beat-unit>quarter</beat-unit><per-minute>80</per-minute></metronome></direction-type>
         <sound tempo="80"/>
@@ -279,17 +283,9 @@
     </measure>
     <measure number="9">
       <note>
-        <rest/>
-        <duration>12</duration>
+        <rest measure="yes"/>
+        <duration>16</duration>
         <voice>1</voice>
-        <type>half</type>
-        <dot/>
-      </note>
-      <note>
-        <rest/>
-        <duration>4</duration>
-        <voice>1</voice>
-        <type>quarter</type>
       </note>
       <barline location="right">
         <bar-style>light-light</bar-style>
@@ -305,7 +301,7 @@
           <top-system-distance>83.6</top-system-distance>
         </system-layout>
       </print>
-      <direction placement="above">
+      <direction placement="above" system="only-top">
         <direction-type><rehearsal enclosure="square" font-weight="bold" font-size="14">A</rehearsal></direction-type>
       </direction>
       <direction placement="above">
@@ -320,7 +316,7 @@
         <duration>4</duration>
         <voice>1</voice>
         <type>quarter</type>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>梦</text>
         </lyric>
@@ -334,7 +330,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>的</text>
         </lyric>
@@ -348,7 +344,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">end</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>翅</text>
         </lyric>
@@ -362,7 +358,7 @@
         <duration>8</duration>
         <voice>1</voice>
         <type>half</type>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>膀</text>
         </lyric>
@@ -378,7 +374,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>已</text>
         </lyric>
@@ -392,7 +388,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">end</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>经</text>
         </lyric>
@@ -406,7 +402,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>受</text>
         </lyric>
@@ -421,7 +417,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">end</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>了</text>
         </lyric>
@@ -434,7 +430,7 @@
         <duration>8</duration>
         <voice>1</voice>
         <type>half</type>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>伤</text>
         </lyric>
@@ -450,7 +446,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>我</text>
         </lyric>
@@ -464,7 +460,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">end</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>飞</text>
         </lyric>
@@ -478,7 +474,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>不</text>
         </lyric>
@@ -492,7 +488,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">end</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>到</text>
         </lyric>
@@ -506,7 +502,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>有</text>
         </lyric>
@@ -520,7 +516,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">end</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>你</text>
         </lyric>
@@ -534,7 +530,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>的</text>
         </lyric>
@@ -548,7 +544,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">end</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>地</text>
         </lyric>
@@ -565,9 +561,9 @@
         <type>eighth</type>
         <beam number="1">begin</beam>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>方</text>
         </lyric>
@@ -626,7 +622,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>每</text>
         </lyric>
@@ -640,7 +636,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">end</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>次</text>
         </lyric>
@@ -654,7 +650,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>想</text>
         </lyric>
@@ -669,7 +665,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">end</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>你</text>
         </lyric>
@@ -684,7 +680,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>我</text>
         </lyric>
@@ -699,7 +695,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">end</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>都</text>
         </lyric>
@@ -714,7 +710,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>会</text>
         </lyric>
@@ -728,7 +724,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">end</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>心</text>
         </lyric>
@@ -743,7 +739,7 @@
         <duration>8</duration>
         <voice>1</voice>
         <type>half</type>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>痛</text>
         </lyric>
@@ -763,7 +759,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>我</text>
         </lyric>
@@ -777,7 +773,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">end</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>的</text>
         </lyric>
@@ -793,7 +789,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>思</text>
         </lyric>
@@ -807,7 +803,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">end</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>念</text>
         </lyric>
@@ -821,7 +817,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>转</text>
         </lyric>
@@ -835,7 +831,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">end</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>过</text>
         </lyric>
@@ -850,7 +846,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>寂</text>
         </lyric>
@@ -864,7 +860,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">end</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>静</text>
         </lyric>
@@ -878,7 +874,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>的</text>
         </lyric>
@@ -892,7 +888,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">end</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>天</text>
         </lyric>
@@ -909,9 +905,9 @@
         <type>eighth</type>
         <beam number="1">begin</beam>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>空</text>
         </lyric>
@@ -961,7 +957,7 @@
           <top-system-distance>83.6</top-system-distance>
         </system-layout>
       </print>
-      <direction placement="above">
+      <direction placement="above" system="only-top">
         <direction-type><rehearsal enclosure="square" font-weight="bold" font-size="14">B</rehearsal></direction-type>
       </direction>
       <note>
@@ -973,7 +969,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>我</text>
         </lyric>
@@ -987,7 +983,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">end</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>的</text>
         </lyric>
@@ -1001,7 +997,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>记</text>
         </lyric>
@@ -1015,7 +1011,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">end</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>忆</text>
         </lyric>
@@ -1029,9 +1025,9 @@
         <voice>1</voice>
         <type>eighth</type>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>里</text>
         </lyric>
@@ -1061,7 +1057,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>有</text>
         </lyric>
@@ -1075,7 +1071,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">end</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>你</text>
         </lyric>
@@ -1090,7 +1086,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>的</text>
         </lyric>
@@ -1106,9 +1102,9 @@
         <type>eighth</type>
         <beam number="1">end</beam>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>痕</text>
         </lyric>
@@ -1139,7 +1135,7 @@
         <notations>
           <tied type="start"/>
         </notations>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>迹</text>
         </lyric>
@@ -1168,7 +1164,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>我</text>
         </lyric>
@@ -1182,7 +1178,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">end</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>的</text>
         </lyric>
@@ -1196,7 +1192,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>爱</text>
         </lyric>
@@ -1210,7 +1206,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">end</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>在</text>
         </lyric>
@@ -1224,7 +1220,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>寂</text>
         </lyric>
@@ -1238,7 +1234,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">end</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>寞</text>
         </lyric>
@@ -1252,7 +1248,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>世</text>
         </lyric>
@@ -1268,9 +1264,9 @@
         <beam number="1">continue</beam>
         <beam number="2">begin</beam>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>界</text>
         </lyric>
@@ -1299,7 +1295,7 @@
         <duration>8</duration>
         <voice>1</voice>
         <type>half</type>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>里</text>
         </lyric>
@@ -1334,7 +1330,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>天</text>
         </lyric>
@@ -1348,7 +1344,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">end</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>空</text>
         </lyric>
@@ -1362,7 +1358,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>飘</text>
         </lyric>
@@ -1377,7 +1373,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">end</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>过</text>
         </lyric>
@@ -1392,7 +1388,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>流</text>
         </lyric>
@@ -1407,7 +1403,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">end</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>浪</text>
         </lyric>
@@ -1421,7 +1417,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>的</text>
         </lyric>
@@ -1435,7 +1431,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">end</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>白</text>
         </lyric>
@@ -1450,7 +1446,7 @@
         <duration>8</duration>
         <voice>1</voice>
         <type>half</type>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>云</text>
         </lyric>
@@ -1470,7 +1466,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>就</text>
         </lyric>
@@ -1485,7 +1481,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">end</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>像</text>
         </lyric>
@@ -1501,7 +1497,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>我</text>
         </lyric>
@@ -1515,7 +1511,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">end</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>们</text>
         </lyric>
@@ -1529,7 +1525,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>已</text>
         </lyric>
@@ -1543,7 +1539,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">end</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>经</text>
         </lyric>
@@ -1558,7 +1554,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>破</text>
         </lyric>
@@ -1572,7 +1568,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">end</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>碎</text>
         </lyric>
@@ -1586,7 +1582,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>的</text>
         </lyric>
@@ -1600,7 +1596,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">end</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>爱</text>
         </lyric>
@@ -1617,9 +1613,9 @@
         <type>eighth</type>
         <beam number="1">begin</beam>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>情</text>
         </lyric>
@@ -1669,7 +1665,7 @@
           <top-system-distance>83.6</top-system-distance>
         </system-layout>
       </print>
-      <direction placement="above">
+      <direction placement="above" system="only-top">
         <direction-type><rehearsal enclosure="square" font-weight="bold" font-size="14">C</rehearsal></direction-type>
       </direction>
       <direction placement="above">
@@ -1684,7 +1680,7 @@
         <duration>4</duration>
         <voice>1</voice>
         <type>quarter</type>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>爱</text>
         </lyric>
@@ -1698,7 +1694,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>得</text>
         </lyric>
@@ -1712,7 +1708,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">end</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>太</text>
         </lyric>
@@ -1726,9 +1722,9 @@
         <voice>1</voice>
         <type>eighth</type>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>累</text>
         </lyric>
@@ -1757,7 +1753,7 @@
         <duration>4</duration>
         <voice>1</voice>
         <type>quarter</type>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>心</text>
         </lyric>
@@ -1771,7 +1767,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>已</text>
         </lyric>
@@ -1787,9 +1783,9 @@
         <type>eighth</type>
         <beam number="1">end</beam>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>憔</text>
         </lyric>
@@ -1815,13 +1811,16 @@
         <voice>1</voice>
         <type>quarter</type>
         <dot/>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>悴</text>
         </lyric>
       </note>
     </measure>
     <measure number="28">
+      <direction placement="above" system="only-top">
+        <direction-type><words font-family="EB Garamond" font-style="italic" font-size="11">poco allarg.</words></direction-type>
+      </direction>
       <note>
         <pitch>
           <step>E</step>
@@ -1831,7 +1830,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>让</text>
         </lyric>
@@ -1845,7 +1844,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">end</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>风</text>
         </lyric>
@@ -1859,7 +1858,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>吹</text>
         </lyric>
@@ -1873,7 +1872,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">end</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>干</text>
         </lyric>
@@ -1887,7 +1886,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>受</text>
         </lyric>
@@ -1901,7 +1900,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">end</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>伤</text>
         </lyric>
@@ -1915,7 +1914,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>的</text>
         </lyric>
@@ -1929,7 +1928,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">end</beam>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>眼</text>
         </lyric>
@@ -1946,9 +1945,9 @@
         <type>eighth</type>
         <beam number="1">begin</beam>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
-        <lyric number="1" default-y="-80">
+        <lyric number="1" default-y="-94">
           <syllabic>single</syllabic>
           <text>泪</text>
         </lyric>
@@ -1985,6 +1984,9 @@
           <slur type="stop" number="1"/>
         </notations>
       </note>
+      <direction placement="above">
+        <direction-type><wedge type="stop" number="1"/></direction-type>
+      </direction>
       <barline location="right">
         <bar-style>light-light</bar-style>
       </barline>
@@ -1999,11 +2001,11 @@
           <system-distance>179.1</system-distance>
         </system-layout>
       </print>
-      <direction placement="above">
+      <direction placement="above" system="only-top">
         <direction-type><rehearsal enclosure="square" font-weight="bold" font-size="14">D</rehearsal></direction-type>
       </direction>
-      <direction placement="above">
-        <direction-type><wedge type="stop" number="1"/></direction-type>
+      <direction placement="above" system="only-top">
+        <direction-type><words font-family="EB Garamond" font-style="italic" font-size="11">a tempo</words></direction-type>
       </direction>
       <note>
         <rest measure="yes"/>
@@ -2033,7 +2035,7 @@
       </note>
     </measure>
     <measure number="34">
-      <direction placement="above">
+      <direction placement="above" system="only-top">
         <direction-type><words font-family="EB Garamond" font-style="italic" font-size="11">rit.</words></direction-type>
       </direction>
       <note>
@@ -2047,6 +2049,9 @@
         <rest measure="yes"/>
         <duration>16</duration>
         <voice>1</voice>
+        <notations>
+          <fermata type="upright"/>
+        </notations>
       </note>
       <barline location="right">
         <bar-style>light-heavy</bar-style>
@@ -2132,7 +2137,7 @@
         <type>eighth</type>
         <beam number="1">begin</beam>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -2143,7 +2148,7 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">end</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -2153,7 +2158,7 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">begin</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -2178,7 +2183,7 @@
         <voice>1</voice>
         <type>quarter</type>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -2244,7 +2249,7 @@
         <type>eighth</type>
         <beam number="1">begin</beam>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -2255,7 +2260,7 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">end</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -2265,7 +2270,7 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">begin</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -2290,7 +2295,7 @@
         <voice>1</voice>
         <type>quarter</type>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -2361,17 +2366,17 @@
     </measure>
     <measure number="13">
       <note>
-        <rest measure="yes"/>
-        <duration>16</duration>
+        <rest/>
+        <duration>8</duration>
         <voice>1</voice>
+        <type>half</type>
       </note>
-    </measure>
-    <measure number="14">
-      <print new-system="yes">
-        <staff-layout>
-          <staff-distance>113.4</staff-distance>
-        </staff-layout>
-      </print>
+      <note>
+        <rest/>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
       <direction placement="below">
         <direction-type><dynamics><p/></dynamics></direction-type>
         <sound dynamics="54"/>
@@ -2381,15 +2386,42 @@
       </direction>
       <note>
         <pitch>
+          <step>G</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <beam number="1">begin</beam>
+        <notations>
+          <slur type="start" number="1"/>
+        </notations>
+      </note>
+      <note>
+        <pitch>
+          <step>A</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+      </note>
+    </measure>
+    <measure number="14">
+      <print new-system="yes">
+        <staff-layout>
+          <staff-distance>113.4</staff-distance>
+        </staff-layout>
+      </print>
+      <note>
+        <pitch>
           <step>B</step>
           <octave>5</octave>
         </pitch>
         <duration>8</duration>
         <voice>1</voice>
         <type>half</type>
-        <notations>
-          <slur type="start" number="1" placement="above"/>
-        </notations>
       </note>
       <note>
         <pitch>
@@ -2411,26 +2443,8 @@
           <octave>5</octave>
         </pitch>
         <duration>8</duration>
-        <tie type="start"/>
         <voice>1</voice>
         <type>half</type>
-        <notations>
-          <tied type="start"/>
-        </notations>
-      </note>
-      <note>
-        <pitch>
-          <step>G</step>
-          <octave>5</octave>
-        </pitch>
-        <duration>2</duration>
-        <tie type="stop"/>
-        <voice>1</voice>
-        <type>eighth</type>
-        <beam number="1">begin</beam>
-        <notations>
-          <tied type="stop"/>
-        </notations>
       </note>
       <note>
         <pitch>
@@ -2440,9 +2454,9 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">end</beam>
+        <beam number="1">begin</beam>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -2453,7 +2467,7 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">begin</beam>
+        <beam number="1">end</beam>
       </note>
       <note>
         <pitch>
@@ -2461,10 +2475,9 @@
           <alter>1</alter>
           <octave>5</octave>
         </pitch>
-        <duration>2</duration>
+        <duration>4</duration>
         <voice>1</voice>
-        <type>eighth</type>
-        <beam number="1">end</beam>
+        <type>quarter</type>
         <notations>
           <slur type="stop" number="1"/>
         </notations>
@@ -2480,7 +2493,7 @@
         <voice>1</voice>
         <type>half</type>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -2506,7 +2519,7 @@
         <voice>1</voice>
         <type>half</type>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -2518,9 +2531,6 @@
         <duration>8</duration>
         <voice>1</voice>
         <type>half</type>
-        <notations>
-          <slur type="stop" number="1"/>
-        </notations>
       </note>
     </measure>
     <measure number="18">
@@ -2529,21 +2539,24 @@
           <staff-distance>113.4</staff-distance>
         </staff-layout>
       </print>
+      <direction placement="below">
+        <direction-type><wedge type="diminuendo" number="1"/></direction-type>
+      </direction>
       <note>
         <pitch>
           <step>E</step>
           <octave>5</octave>
         </pitch>
-        <duration>4</duration>
+        <duration>8</duration>
         <voice>1</voice>
-        <type>quarter</type>
+        <type>half</type>
+        <notations>
+          <slur type="stop" number="1"/>
+        </notations>
       </note>
-      <note>
-        <rest/>
-        <duration>4</duration>
-        <voice>1</voice>
-        <type>quarter</type>
-      </note>
+      <direction placement="below">
+        <direction-type><wedge type="stop" number="1"/></direction-type>
+      </direction>
       <note>
         <rest/>
         <duration>8</duration>
@@ -2586,7 +2599,7 @@
         <type>eighth</type>
         <beam number="1">begin</beam>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -2597,7 +2610,7 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">end</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -2607,7 +2620,7 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">begin</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -2642,11 +2655,11 @@
         <voice>1</voice>
         <type>whole</type>
       </note>
-    </measure>
-    <measure number="23">
       <direction placement="below">
         <direction-type><wedge type="stop" number="1"/></direction-type>
       </direction>
+    </measure>
+    <measure number="23">
       <direction placement="below">
         <direction-type><dynamics><mf/></dynamics></direction-type>
         <sound dynamics="89"/>
@@ -2660,7 +2673,7 @@
         <voice>1</voice>
         <type>quarter</type>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -2706,6 +2719,10 @@
       </note>
     </measure>
     <measure number="24">
+      <direction placement="below">
+        <direction-type><dynamics><mp/></dynamics></direction-type>
+        <sound dynamics="71"/>
+      </direction>
       <note>
         <pitch>
           <step>E</step>
@@ -2715,7 +2732,7 @@
         <voice>1</voice>
         <type>half</type>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -2745,7 +2762,7 @@
         <voice>1</voice>
         <type>half</type>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -2754,13 +2771,26 @@
           <alter>1</alter>
           <octave>5</octave>
         </pitch>
-        <duration>8</duration>
+        <duration>6</duration>
         <voice>1</voice>
-        <type>half</type>
+        <type>quarter</type>
+        <dot/>
+      </note>
+      <note>
+        <pitch>
+          <step>A</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
         <notations>
           <slur type="stop" number="1"/>
         </notations>
       </note>
+      <direction placement="below">
+        <direction-type><wedge type="stop" number="1"/></direction-type>
+      </direction>
     </measure>
     <measure number="26">
       <print new-page="yes">
@@ -2769,11 +2799,8 @@
         </staff-layout>
       </print>
       <direction placement="below">
-        <direction-type><wedge type="stop" number="1"/></direction-type>
-      </direction>
-      <direction placement="below">
-        <direction-type><dynamics><f/></dynamics></direction-type>
-        <sound dynamics="106"/>
+        <direction-type><dynamics><mf/></dynamics></direction-type>
+        <sound dynamics="89"/>
       </direction>
       <direction placement="above">
         <direction-type><words font-family="EB Garamond" font-style="italic">con anima</words></direction-type>
@@ -2786,9 +2813,6 @@
         <duration>8</duration>
         <voice>1</voice>
         <type>half</type>
-        <notations>
-          <slur type="start" number="1" placement="above"/>
-        </notations>
       </note>
       <note>
         <pitch>
@@ -2798,9 +2822,6 @@
         <duration>8</duration>
         <voice>1</voice>
         <type>half</type>
-        <notations>
-          <slur type="stop" number="1"/>
-        </notations>
       </note>
     </measure>
     <measure number="27">
@@ -2809,9 +2830,33 @@
           <step>B</step>
           <octave>5</octave>
         </pitch>
-        <duration>16</duration>
+        <duration>8</duration>
         <voice>1</voice>
-        <type>whole</type>
+        <type>half</type>
+        <notations>
+          <slur type="start" number="1"/>
+        </notations>
+      </note>
+      <note>
+        <pitch>
+          <step>A</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note>
+        <pitch>
+          <step>G</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <notations>
+          <slur type="stop" number="1"/>
+        </notations>
       </note>
     </measure>
     <measure number="28">
@@ -2823,8 +2868,17 @@
         <duration>8</duration>
         <voice>1</voice>
         <type>half</type>
+      </note>
+      <note>
+        <pitch>
+          <step>B</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>quarter</type>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -2832,9 +2886,9 @@
           <step>A</step>
           <octave>5</octave>
         </pitch>
-        <duration>8</duration>
+        <duration>4</duration>
         <voice>1</voice>
-        <type>half</type>
+        <type>quarter</type>
         <notations>
           <slur type="stop" number="1"/>
         </notations>
@@ -2849,10 +2903,29 @@
           <step>B</step>
           <octave>5</octave>
         </pitch>
-        <duration>16</duration>
+        <duration>12</duration>
         <voice>1</voice>
-        <type>whole</type>
+        <type>half</type>
+        <dot/>
+        <notations>
+          <slur type="start" number="1"/>
+        </notations>
       </note>
+      <note>
+        <pitch>
+          <step>A</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <notations>
+          <slur type="stop" number="1"/>
+        </notations>
+      </note>
+      <direction placement="below">
+        <direction-type><wedge type="stop" number="1"/></direction-type>
+      </direction>
       <barline location="right">
         <bar-style>light-light</bar-style>
       </barline>
@@ -2863,9 +2936,6 @@
           <staff-distance>113.4</staff-distance>
         </staff-layout>
       </print>
-      <direction placement="below">
-        <direction-type><wedge type="stop" number="1"/></direction-type>
-      </direction>
       <direction placement="below">
         <direction-type><dynamics><p/></dynamics></direction-type>
         <sound dynamics="54"/>
@@ -2880,7 +2950,7 @@
         <type>eighth</type>
         <beam number="1">begin</beam>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -2891,7 +2961,7 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">end</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -2901,7 +2971,7 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">begin</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -2926,7 +2996,7 @@
         <voice>1</voice>
         <type>quarter</type>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -3007,7 +3077,7 @@
         <type>eighth</type>
         <beam number="1">begin</beam>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -3018,7 +3088,7 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">end</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -3028,7 +3098,7 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">begin</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -3053,7 +3123,7 @@
         <voice>1</voice>
         <type>quarter</type>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -3117,6 +3187,9 @@
         <direction-type><dynamics><pp/></dynamics></direction-type>
         <sound dynamics="36"/>
       </direction>
+      <direction placement="above">
+        <direction-type><words font-family="EB Garamond" font-style="italic">sul tasto</words></direction-type>
+      </direction>
       <note>
         <pitch>
           <step>B</step>
@@ -3208,6 +3281,9 @@
         <direction-type><dynamics><p/></dynamics></direction-type>
         <sound dynamics="54"/>
       </direction>
+      <direction placement="above">
+        <direction-type><words font-family="EB Garamond" font-style="italic">ord.</words></direction-type>
+      </direction>
       <note>
         <pitch>
           <step>B</step>
@@ -3294,7 +3370,7 @@
         <voice>1</voice>
         <type>half</type>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -3411,7 +3487,7 @@
         <voice>1</voice>
         <type>half</type>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -3496,6 +3572,10 @@
           <staff-distance>65.7</staff-distance>
         </staff-layout>
       </print>
+      <direction placement="below">
+        <direction-type><dynamics><p/></dynamics></direction-type>
+        <sound dynamics="54"/>
+      </direction>
       <note>
         <pitch>
           <step>E</step>
@@ -3576,6 +3656,9 @@
         <voice>1</voice>
         <type>whole</type>
       </note>
+      <direction placement="below">
+        <direction-type><wedge type="stop" number="1"/></direction-type>
+      </direction>
     </measure>
     <measure number="22">
       <print new-system="yes">
@@ -3584,11 +3667,8 @@
         </staff-layout>
       </print>
       <direction placement="below">
-        <direction-type><wedge type="stop" number="1"/></direction-type>
-      </direction>
-      <direction placement="below">
-        <direction-type><dynamics><mf/></dynamics></direction-type>
-        <sound dynamics="89"/>
+        <direction-type><dynamics><mp/></dynamics></direction-type>
+        <sound dynamics="71"/>
       </direction>
       <note>
         <pitch>
@@ -3664,6 +3744,9 @@
         <type>half</type>
         <accidental>sharp</accidental>
       </note>
+      <direction placement="below">
+        <direction-type><wedge type="stop" number="1"/></direction-type>
+      </direction>
     </measure>
     <measure number="26">
       <print new-page="yes">
@@ -3672,11 +3755,8 @@
         </staff-layout>
       </print>
       <direction placement="below">
-        <direction-type><wedge type="stop" number="1"/></direction-type>
-      </direction>
-      <direction placement="below">
-        <direction-type><dynamics><f/></dynamics></direction-type>
-        <sound dynamics="106"/>
+        <direction-type><dynamics><mf/></dynamics></direction-type>
+        <sound dynamics="89"/>
       </direction>
       <note>
         <pitch>
@@ -3694,8 +3774,12 @@
           <octave>5</octave>
         </pitch>
         <duration>8</duration>
+        <tie type="start"/>
         <voice>1</voice>
         <type>half</type>
+        <notations>
+          <tied type="start"/>
+        </notations>
       </note>
     </measure>
     <measure number="27">
@@ -3705,18 +3789,23 @@
           <alter>1</alter>
           <octave>5</octave>
         </pitch>
-        <duration>8</duration>
+        <duration>12</duration>
+        <tie type="stop"/>
         <voice>1</voice>
         <type>half</type>
+        <dot/>
+        <notations>
+          <tied type="stop"/>
+        </notations>
       </note>
       <note>
         <pitch>
           <step>E</step>
           <octave>5</octave>
         </pitch>
-        <duration>8</duration>
+        <duration>4</duration>
         <voice>1</voice>
-        <type>half</type>
+        <type>quarter</type>
       </note>
     </measure>
     <measure number="28">
@@ -3746,13 +3835,16 @@
       </direction>
       <note>
         <pitch>
-          <step>G</step>
+          <step>D</step>
           <octave>5</octave>
         </pitch>
         <duration>16</duration>
         <voice>1</voice>
         <type>whole</type>
       </note>
+      <direction placement="below">
+        <direction-type><wedge type="stop" number="1"/></direction-type>
+      </direction>
       <barline location="right">
         <bar-style>light-light</bar-style>
       </barline>
@@ -3763,9 +3855,6 @@
           <staff-distance>65.7</staff-distance>
         </staff-layout>
       </print>
-      <direction placement="below">
-        <direction-type><wedge type="stop" number="1"/></direction-type>
-      </direction>
       <direction placement="below">
         <direction-type><dynamics><p/></dynamics></direction-type>
         <sound dynamics="54"/>
@@ -3867,15 +3956,33 @@
           <step>A</step>
           <octave>4</octave>
         </pitch>
-        <duration>8</duration>
+        <duration>4</duration>
+        <tie type="start"/>
         <voice>1</voice>
-        <type>half</type>
+        <type>quarter</type>
         <notations>
+          <tied type="start"/>
+        </notations>
+      </note>
+      <note>
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>4</duration>
+        <tie type="stop"/>
+        <voice>1</voice>
+        <type>quarter</type>
+        <notations>
+          <tied type="stop"/>
           <fermata type="upright"/>
         </notations>
       </note>
     </measure>
     <measure number="35">
+      <direction placement="below">
+        <direction-type><words font-family="EB Garamond" font-style="italic">morendo</words></direction-type>
+      </direction>
       <note>
         <pitch>
           <step>F</step>
@@ -3886,7 +3993,7 @@
         <voice>1</voice>
         <type>half</type>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -3933,6 +4040,9 @@
         <direction-type><dynamics><pp/></dynamics></direction-type>
         <sound dynamics="36"/>
       </direction>
+      <direction placement="above">
+        <direction-type><words font-family="EB Garamond" font-style="italic">sul tasto</words></direction-type>
+      </direction>
       <note>
         <pitch>
           <step>G</step>
@@ -4016,6 +4126,9 @@
         <direction-type><dynamics><p/></dynamics></direction-type>
         <sound dynamics="54"/>
       </direction>
+      <direction placement="above">
+        <direction-type><words font-family="EB Garamond" font-style="italic">ord.</words></direction-type>
+      </direction>
       <note>
         <pitch>
           <step>G</step>
@@ -4054,7 +4167,7 @@
         <voice>1</voice>
         <type>quarter</type>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -4125,8 +4238,8 @@
       </direction>
       <note>
         <pitch>
-          <step>G</step>
-          <octave>3</octave>
+          <step>C</step>
+          <octave>4</octave>
         </pitch>
         <duration>8</duration>
         <voice>1</voice>
@@ -4134,8 +4247,7 @@
       </note>
       <note>
         <pitch>
-          <step>F</step>
-          <alter>1</alter>
+          <step>A</step>
           <octave>3</octave>
         </pitch>
         <duration>8</duration>
@@ -4146,8 +4258,7 @@
     <measure number="11">
       <note>
         <pitch>
-          <step>F</step>
-          <alter>1</alter>
+          <step>A</step>
           <octave>3</octave>
         </pitch>
         <duration>8</duration>
@@ -4215,7 +4326,7 @@
         <voice>1</voice>
         <type>quarter</type>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -4232,15 +4343,14 @@
       </note>
       <note>
         <pitch>
-          <step>F</step>
-          <alter>1</alter>
+          <step>A</step>
           <octave>3</octave>
         </pitch>
         <duration>4</duration>
         <voice>1</voice>
         <type>quarter</type>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -4266,7 +4376,7 @@
         <voice>1</voice>
         <type>quarter</type>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -4290,7 +4400,7 @@
         <voice>1</voice>
         <type>quarter</type>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -4316,7 +4426,7 @@
         <voice>1</voice>
         <type>quarter</type>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -4340,7 +4450,7 @@
         <voice>1</voice>
         <type>quarter</type>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -4366,7 +4476,7 @@
         <voice>1</voice>
         <type>quarter</type>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -4391,7 +4501,7 @@
         <voice>1</voice>
         <type>quarter</type>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -4414,12 +4524,25 @@
         </staff-layout>
       </print>
       <direction placement="below">
-        <direction-type><dynamics><mp/></dynamics></direction-type>
-        <sound dynamics="71"/>
+        <direction-type><dynamics><p/></dynamics></direction-type>
+        <sound dynamics="54"/>
       </direction>
       <direction placement="above">
         <direction-type><words font-family="EB Garamond" font-style="italic">legato</words></direction-type>
       </direction>
+      <note>
+        <pitch>
+          <step>E</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <beam number="1">begin</beam>
+        <notations>
+          <slur type="start" number="1"/>
+        </notations>
+      </note>
       <note>
         <pitch>
           <step>G</step>
@@ -4428,10 +4551,7 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">begin</beam>
-        <notations>
-          <slur type="start" number="1" placement="above"/>
-        </notations>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -4441,22 +4561,12 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">end</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
-          <step>E</step>
-          <octave>4</octave>
-        </pitch>
-        <duration>2</duration>
-        <voice>1</voice>
-        <type>eighth</type>
-        <beam number="1">begin</beam>
-      </note>
-      <note>
-        <pitch>
-          <step>C</step>
-          <octave>4</octave>
+          <step>G</step>
+          <octave>3</octave>
         </pitch>
         <duration>2</duration>
         <voice>1</voice>
@@ -4468,16 +4578,15 @@
       </note>
       <note>
         <pitch>
-          <step>F</step>
-          <alter>1</alter>
-          <octave>3</octave>
+          <step>D</step>
+          <octave>4</octave>
         </pitch>
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -4488,17 +4597,18 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">end</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
-          <step>D</step>
-          <octave>4</octave>
+          <step>F</step>
+          <alter>1</alter>
+          <octave>3</octave>
         </pitch>
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">begin</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -4517,15 +4627,15 @@
     <measure number="19">
       <note>
         <pitch>
-          <step>D</step>
-          <octave>4</octave>
+          <step>A</step>
+          <octave>3</octave>
         </pitch>
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -4536,7 +4646,7 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">end</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -4547,7 +4657,7 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">begin</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -4564,7 +4674,7 @@
       </note>
       <note>
         <pitch>
-          <step>G</step>
+          <step>E</step>
           <octave>3</octave>
         </pitch>
         <duration>2</duration>
@@ -4572,8 +4682,18 @@
         <type>eighth</type>
         <beam number="1">begin</beam>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
+      </note>
+      <note>
+        <pitch>
+          <step>G</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -4583,21 +4703,11 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">end</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
-          <step>E</step>
-          <octave>4</octave>
-        </pitch>
-        <duration>2</duration>
-        <voice>1</voice>
-        <type>eighth</type>
-        <beam number="1">begin</beam>
-      </note>
-      <note>
-        <pitch>
-          <step>B</step>
+          <step>G</step>
           <octave>3</octave>
         </pitch>
         <duration>2</duration>
@@ -4612,41 +4722,41 @@
     <measure number="20">
       <note>
         <pitch>
-          <step>G</step>
-          <octave>3</octave>
+          <step>C</step>
+          <octave>4</octave>
         </pitch>
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
         <pitch>
-          <step>C</step>
-          <octave>4</octave>
+          <step>A</step>
+          <octave>3</octave>
         </pitch>
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">end</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
           <step>E</step>
-          <octave>4</octave>
+          <octave>3</octave>
         </pitch>
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">begin</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
-          <step>C</step>
-          <octave>4</octave>
+          <step>A</step>
+          <octave>3</octave>
         </pitch>
         <duration>2</duration>
         <voice>1</voice>
@@ -4667,7 +4777,7 @@
         <type>eighth</type>
         <beam number="1">begin</beam>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -4678,7 +4788,7 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">end</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -4688,7 +4798,7 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">begin</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -4710,40 +4820,40 @@
       </direction>
       <note>
         <pitch>
-          <step>G</step>
-          <octave>3</octave>
-        </pitch>
-        <duration>2</duration>
-        <voice>1</voice>
-        <type>eighth</type>
-        <beam number="1">begin</beam>
-        <notations>
-          <slur type="start" number="1" placement="above"/>
-        </notations>
-      </note>
-      <note>
-        <pitch>
-          <step>B</step>
-          <octave>3</octave>
-        </pitch>
-        <duration>2</duration>
-        <voice>1</voice>
-        <type>eighth</type>
-        <beam number="1">end</beam>
-      </note>
-      <note>
-        <pitch>
           <step>E</step>
-          <octave>4</octave>
+          <octave>3</octave>
         </pitch>
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
+        <notations>
+          <slur type="start" number="1"/>
+        </notations>
+      </note>
+      <note>
+        <pitch>
+          <step>G</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
           <step>B</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <beam number="1">continue</beam>
+      </note>
+      <note>
+        <pitch>
+          <step>G</step>
           <octave>3</octave>
         </pitch>
         <duration>2</duration>
@@ -4759,47 +4869,13 @@
           <step>G</step>
           <octave>3</octave>
         </pitch>
-        <duration>2</duration>
+        <duration>8</duration>
         <voice>1</voice>
-        <type>eighth</type>
-        <beam number="1">begin</beam>
-        <notations>
-          <slur type="start" number="1" placement="above"/>
-        </notations>
+        <type>half</type>
       </note>
-      <note>
-        <pitch>
-          <step>B</step>
-          <octave>3</octave>
-        </pitch>
-        <duration>2</duration>
-        <voice>1</voice>
-        <type>eighth</type>
-        <beam number="1">end</beam>
-      </note>
-      <note>
-        <pitch>
-          <step>D</step>
-          <octave>4</octave>
-        </pitch>
-        <duration>2</duration>
-        <voice>1</voice>
-        <type>eighth</type>
-        <beam number="1">begin</beam>
-      </note>
-      <note>
-        <pitch>
-          <step>B</step>
-          <octave>3</octave>
-        </pitch>
-        <duration>2</duration>
-        <voice>1</voice>
-        <type>eighth</type>
-        <beam number="1">end</beam>
-        <notations>
-          <slur type="stop" number="1"/>
-        </notations>
-      </note>
+      <direction placement="below">
+        <direction-type><wedge type="stop" number="1"/></direction-type>
+      </direction>
     </measure>
     <measure number="22">
       <print new-system="yes">
@@ -4808,11 +4884,8 @@
         </staff-layout>
       </print>
       <direction placement="below">
-        <direction-type><wedge type="stop" number="1"/></direction-type>
-      </direction>
-      <direction placement="below">
-        <direction-type><dynamics><mf/></dynamics></direction-type>
-        <sound dynamics="89"/>
+        <direction-type><dynamics><mp/></dynamics></direction-type>
+        <sound dynamics="71"/>
       </direction>
       <note>
         <pitch>
@@ -4824,7 +4897,7 @@
         <type>eighth</type>
         <beam number="1">begin</beam>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -4835,7 +4908,7 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">end</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -4845,7 +4918,7 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">begin</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -4871,7 +4944,7 @@
         <type>eighth</type>
         <beam number="1">begin</beam>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -4882,7 +4955,7 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">end</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -4892,7 +4965,7 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">begin</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -4911,15 +4984,15 @@
     <measure number="23">
       <note>
         <pitch>
-          <step>G</step>
-          <octave>3</octave>
+          <step>E</step>
+          <octave>4</octave>
         </pitch>
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -4930,17 +5003,17 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">end</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
-          <step>E</step>
-          <octave>4</octave>
+          <step>G</step>
+          <octave>3</octave>
         </pitch>
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">begin</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -4965,7 +5038,7 @@
         <type>eighth</type>
         <beam number="1">begin</beam>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -4976,7 +5049,7 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">end</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -4986,7 +5059,7 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">begin</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -5013,7 +5086,7 @@
         <type>eighth</type>
         <beam number="1">begin</beam>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -5024,7 +5097,7 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">end</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -5034,7 +5107,7 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">begin</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -5059,7 +5132,7 @@
         <type>eighth</type>
         <beam number="1">begin</beam>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -5070,7 +5143,7 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">end</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -5080,7 +5153,7 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">begin</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -5107,7 +5180,7 @@
         <type>eighth</type>
         <beam number="1">begin</beam>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -5118,7 +5191,7 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">end</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -5128,7 +5201,7 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">begin</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -5157,116 +5230,7 @@
         <type>eighth</type>
         <beam number="1">begin</beam>
         <notations>
-          <slur type="start" number="1" placement="above"/>
-        </notations>
-      </note>
-      <note>
-        <pitch>
-          <step>C</step>
-          <octave>4</octave>
-        </pitch>
-        <duration>2</duration>
-        <voice>1</voice>
-        <type>eighth</type>
-        <beam number="1">end</beam>
-      </note>
-      <note>
-        <pitch>
-          <step>D</step>
-          <alter>1</alter>
-          <octave>4</octave>
-        </pitch>
-        <duration>2</duration>
-        <voice>1</voice>
-        <type>eighth</type>
-        <accidental>sharp</accidental>
-        <beam number="1">begin</beam>
-      </note>
-      <note>
-        <pitch>
-          <step>C</step>
-          <octave>4</octave>
-        </pitch>
-        <duration>2</duration>
-        <voice>1</voice>
-        <type>eighth</type>
-        <beam number="1">end</beam>
-        <notations>
-          <slur type="stop" number="1"/>
-        </notations>
-      </note>
-    </measure>
-    <measure number="26">
-      <print new-page="yes">
-        <staff-layout>
-          <staff-distance>65.7</staff-distance>
-        </staff-layout>
-      </print>
-      <direction placement="below">
-        <direction-type><wedge type="stop" number="1"/></direction-type>
-      </direction>
-      <direction placement="below">
-        <direction-type><dynamics><f/></dynamics></direction-type>
-        <sound dynamics="106"/>
-      </direction>
-      <note>
-        <pitch>
-          <step>G</step>
-          <octave>3</octave>
-        </pitch>
-        <duration>2</duration>
-        <voice>1</voice>
-        <type>eighth</type>
-        <beam number="1">begin</beam>
-        <notations>
-          <slur type="start" number="1" placement="above"/>
-        </notations>
-      </note>
-      <note>
-        <pitch>
-          <step>C</step>
-          <octave>4</octave>
-        </pitch>
-        <duration>2</duration>
-        <voice>1</voice>
-        <type>eighth</type>
-        <beam number="1">end</beam>
-      </note>
-      <note>
-        <pitch>
-          <step>E</step>
-          <octave>4</octave>
-        </pitch>
-        <duration>2</duration>
-        <voice>1</voice>
-        <type>eighth</type>
-        <beam number="1">begin</beam>
-      </note>
-      <note>
-        <pitch>
-          <step>C</step>
-          <octave>4</octave>
-        </pitch>
-        <duration>2</duration>
-        <voice>1</voice>
-        <type>eighth</type>
-        <beam number="1">end</beam>
-        <notations>
-          <slur type="stop" number="1"/>
-        </notations>
-      </note>
-      <note>
-        <pitch>
-          <step>F</step>
-          <alter>1</alter>
-          <octave>3</octave>
-        </pitch>
-        <duration>2</duration>
-        <voice>1</voice>
-        <type>eighth</type>
-        <beam number="1">begin</beam>
-        <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -5277,7 +5241,90 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
+        <beam number="1">continue</beam>
+      </note>
+      <note>
+        <pitch>
+          <step>C</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <beam number="1">continue</beam>
+      </note>
+      <note>
+        <pitch>
+          <step>A</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
         <beam number="1">end</beam>
+        <notations>
+          <slur type="stop" number="1"/>
+        </notations>
+      </note>
+      <direction placement="below">
+        <direction-type><wedge type="stop" number="1"/></direction-type>
+      </direction>
+    </measure>
+    <measure number="26">
+      <print new-page="yes">
+        <staff-layout>
+          <staff-distance>65.7</staff-distance>
+        </staff-layout>
+      </print>
+      <direction placement="below">
+        <direction-type><dynamics><mf/></dynamics></direction-type>
+        <sound dynamics="89"/>
+      </direction>
+      <note>
+        <pitch>
+          <step>E</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <beam number="1">begin</beam>
+        <notations>
+          <slur type="start" number="1"/>
+        </notations>
+      </note>
+      <note>
+        <pitch>
+          <step>G</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <beam number="1">continue</beam>
+      </note>
+      <note>
+        <pitch>
+          <step>C</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <beam number="1">continue</beam>
+      </note>
+      <note>
+        <pitch>
+          <step>G</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+        <notations>
+          <slur type="stop" number="1"/>
+        </notations>
       </note>
       <note>
         <pitch>
@@ -5288,6 +5335,30 @@
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
+        <notations>
+          <slur type="start" number="1"/>
+        </notations>
+      </note>
+      <note>
+        <pitch>
+          <step>A</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <beam number="1">continue</beam>
+      </note>
+      <note>
+        <pitch>
+          <step>F</step>
+          <alter>1</alter>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -5306,8 +5377,7 @@
     <measure number="27">
       <note>
         <pitch>
-          <step>F</step>
-          <alter>1</alter>
+          <step>A</step>
           <octave>3</octave>
         </pitch>
         <duration>2</duration>
@@ -5315,32 +5385,34 @@
         <type>eighth</type>
         <beam number="1">begin</beam>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
         <pitch>
-          <step>B</step>
+          <step>F</step>
+          <alter>1</alter>
           <octave>3</octave>
         </pitch>
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">end</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
-          <step>D</step>
-          <octave>4</octave>
+          <step>A</step>
+          <octave>3</octave>
         </pitch>
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">begin</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
-          <step>B</step>
+          <step>F</step>
+          <alter>1</alter>
           <octave>3</octave>
         </pitch>
         <duration>2</duration>
@@ -5361,28 +5433,28 @@
         <type>eighth</type>
         <beam number="1">begin</beam>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
         <pitch>
-          <step>B</step>
+          <step>E</step>
           <octave>3</octave>
         </pitch>
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">end</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
-          <step>E</step>
-          <octave>4</octave>
+          <step>G</step>
+          <octave>3</octave>
         </pitch>
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">begin</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -5401,7 +5473,7 @@
     <measure number="28">
       <note>
         <pitch>
-          <step>G</step>
+          <step>E</step>
           <octave>3</octave>
         </pitch>
         <duration>2</duration>
@@ -5409,33 +5481,33 @@
         <type>eighth</type>
         <beam number="1">begin</beam>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
         <pitch>
+          <step>G</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <beam number="1">continue</beam>
+      </note>
+      <note>
+        <pitch>
           <step>C</step>
           <octave>4</octave>
         </pitch>
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">end</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
-          <step>E</step>
-          <octave>4</octave>
-        </pitch>
-        <duration>2</duration>
-        <voice>1</voice>
-        <type>eighth</type>
-        <beam number="1">begin</beam>
-      </note>
-      <note>
-        <pitch>
-          <step>C</step>
-          <octave>4</octave>
+          <step>G</step>
+          <octave>3</octave>
         </pitch>
         <duration>2</duration>
         <voice>1</voice>
@@ -5447,16 +5519,15 @@
       </note>
       <note>
         <pitch>
-          <step>F</step>
-          <alter>1</alter>
-          <octave>3</octave>
+          <step>D</step>
+          <octave>4</octave>
         </pitch>
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
         <beam number="1">begin</beam>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -5467,17 +5538,18 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">end</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
-          <step>D</step>
-          <octave>4</octave>
+          <step>F</step>
+          <alter>1</alter>
+          <octave>3</octave>
         </pitch>
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">begin</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -5507,7 +5579,7 @@
         <type>eighth</type>
         <beam number="1">begin</beam>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -5518,7 +5590,7 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">end</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -5528,7 +5600,7 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">begin</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -5553,7 +5625,7 @@
         <type>eighth</type>
         <beam number="1">begin</beam>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -5564,7 +5636,7 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">end</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -5574,7 +5646,7 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">begin</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -5589,6 +5661,9 @@
           <slur type="stop" number="1"/>
         </notations>
       </note>
+      <direction placement="below">
+        <direction-type><wedge type="stop" number="1"/></direction-type>
+      </direction>
       <barline location="right">
         <bar-style>light-light</bar-style>
       </barline>
@@ -5599,9 +5674,6 @@
           <staff-distance>65.7</staff-distance>
         </staff-layout>
       </print>
-      <direction placement="below">
-        <direction-type><wedge type="stop" number="1"/></direction-type>
-      </direction>
       <direction placement="below">
         <direction-type><dynamics><p/></dynamics></direction-type>
         <sound dynamics="54"/>
@@ -5686,15 +5758,33 @@
           <step>A</step>
           <octave>3</octave>
         </pitch>
-        <duration>8</duration>
+        <duration>4</duration>
+        <tie type="start"/>
         <voice>1</voice>
-        <type>half</type>
+        <type>quarter</type>
         <notations>
+          <tied type="start"/>
+        </notations>
+      </note>
+      <note>
+        <pitch>
+          <step>A</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>4</duration>
+        <tie type="stop"/>
+        <voice>1</voice>
+        <type>quarter</type>
+        <notations>
+          <tied type="stop"/>
           <fermata type="upright"/>
         </notations>
       </note>
     </measure>
     <measure number="35">
+      <direction placement="below">
+        <direction-type><words font-family="EB Garamond" font-style="italic">morendo</words></direction-type>
+      </direction>
       <note>
         <pitch>
           <step>B</step>
@@ -5766,7 +5856,7 @@
         <type>eighth</type>
         <beam number="1">begin</beam>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -5777,7 +5867,7 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">end</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -5787,7 +5877,7 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">begin</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -5812,7 +5902,7 @@
         <voice>1</voice>
         <type>quarter</type>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -5869,7 +5959,7 @@
         <type>eighth</type>
         <beam number="1">begin</beam>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -5880,7 +5970,7 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">end</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -5890,7 +5980,7 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">begin</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -5916,7 +6006,7 @@
         <type>quarter</type>
         <dot/>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -6219,8 +6309,8 @@
         </staff-layout>
       </print>
       <direction placement="below">
-        <direction-type><dynamics><mp/></dynamics></direction-type>
-        <sound dynamics="71"/>
+        <direction-type><dynamics><p/></dynamics></direction-type>
+        <sound dynamics="54"/>
       </direction>
       <note>
         <pitch>
@@ -6237,19 +6327,27 @@
           <octave>3</octave>
         </pitch>
         <duration>8</duration>
+        <tie type="start"/>
         <voice>1</voice>
         <type>half</type>
+        <notations>
+          <tied type="start"/>
+        </notations>
       </note>
     </measure>
     <measure number="19">
       <note>
         <pitch>
-          <step>B</step>
-          <octave>2</octave>
+          <step>D</step>
+          <octave>3</octave>
         </pitch>
         <duration>8</duration>
+        <tie type="stop"/>
         <voice>1</voice>
         <type>half</type>
+        <notations>
+          <tied type="stop"/>
+        </notations>
       </note>
       <note>
         <pitch>
@@ -6303,6 +6401,9 @@
         <voice>1</voice>
         <type>half</type>
       </note>
+      <direction placement="below">
+        <direction-type><wedge type="stop" number="1"/></direction-type>
+      </direction>
     </measure>
     <measure number="22">
       <print new-system="yes">
@@ -6311,11 +6412,8 @@
         </staff-layout>
       </print>
       <direction placement="below">
-        <direction-type><wedge type="stop" number="1"/></direction-type>
-      </direction>
-      <direction placement="below">
-        <direction-type><dynamics><mf/></dynamics></direction-type>
-        <sound dynamics="89"/>
+        <direction-type><dynamics><mp/></dynamics></direction-type>
+        <sound dynamics="71"/>
       </direction>
       <note>
         <pitch>
@@ -6398,6 +6496,9 @@
         <voice>1</voice>
         <type>half</type>
       </note>
+      <direction placement="below">
+        <direction-type><wedge type="stop" number="1"/></direction-type>
+      </direction>
     </measure>
     <measure number="26">
       <print new-page="yes">
@@ -6406,11 +6507,8 @@
         </staff-layout>
       </print>
       <direction placement="below">
-        <direction-type><wedge type="stop" number="1"/></direction-type>
-      </direction>
-      <direction placement="below">
-        <direction-type><dynamics><f/></dynamics></direction-type>
-        <sound dynamics="106"/>
+        <direction-type><dynamics><mf/></dynamics></direction-type>
+        <sound dynamics="89"/>
       </direction>
       <note>
         <pitch>
@@ -6434,12 +6532,14 @@
     <measure number="27">
       <note>
         <pitch>
-          <step>B</step>
+          <step>D</step>
+          <alter>1</alter>
           <octave>2</octave>
         </pitch>
         <duration>8</duration>
         <voice>1</voice>
         <type>half</type>
+        <accidental>sharp</accidental>
       </note>
       <note>
         <pitch>
@@ -6464,7 +6564,7 @@
       <note>
         <pitch>
           <step>D</step>
-          <octave>3</octave>
+          <octave>2</octave>
         </pitch>
         <duration>8</duration>
         <voice>1</voice>
@@ -6484,6 +6584,9 @@
         <voice>1</voice>
         <type>whole</type>
       </note>
+      <direction placement="below">
+        <direction-type><wedge type="stop" number="1"/></direction-type>
+      </direction>
       <barline location="right">
         <bar-style>light-light</bar-style>
       </barline>
@@ -6494,9 +6597,6 @@
           <staff-distance>65.7</staff-distance>
         </staff-layout>
       </print>
-      <direction placement="below">
-        <direction-type><wedge type="stop" number="1"/></direction-type>
-      </direction>
       <direction placement="below">
         <direction-type><dynamics><p/></dynamics></direction-type>
         <sound dynamics="54"/>
@@ -6549,7 +6649,7 @@
         <type>eighth</type>
         <beam number="1">begin</beam>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -6560,7 +6660,7 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">end</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -6570,7 +6670,7 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <beam number="1">begin</beam>
+        <beam number="1">continue</beam>
       </note>
       <note>
         <pitch>
@@ -6596,7 +6696,7 @@
         <type>quarter</type>
         <dot/>
         <notations>
-          <slur type="start" number="1" placement="above"/>
+          <slur type="start" number="1"/>
         </notations>
       </note>
       <note>
@@ -6650,15 +6750,34 @@
           <alter>1</alter>
           <octave>2</octave>
         </pitch>
-        <duration>8</duration>
+        <duration>4</duration>
+        <tie type="start"/>
         <voice>1</voice>
-        <type>half</type>
+        <type>quarter</type>
         <notations>
+          <tied type="start"/>
+        </notations>
+      </note>
+      <note>
+        <pitch>
+          <step>F</step>
+          <alter>1</alter>
+          <octave>2</octave>
+        </pitch>
+        <duration>4</duration>
+        <tie type="stop"/>
+        <voice>1</voice>
+        <type>quarter</type>
+        <notations>
+          <tied type="stop"/>
           <fermata type="upright"/>
         </notations>
       </note>
     </measure>
     <measure number="35">
+      <direction placement="below">
+        <direction-type><words font-family="EB Garamond" font-style="italic">morendo</words></direction-type>
+      </direction>
       <note>
         <pitch>
           <step>E</step>

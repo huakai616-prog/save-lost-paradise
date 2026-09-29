@@ -3,6 +3,7 @@
 from fractions import Fraction as F
 from xml.sax.saxutils import escape
 
+import model
 import score_data as SD
 
 DIV = 4                      # 每四分音符 4 个 division（最小十六分音符）
@@ -30,14 +31,14 @@ def x(s):
     return escape(str(s))
 
 
-def compute_beams(events):
-    """按拍组合八分/十六分音符的符杠（与 LilyPond 设置一致）。"""
+def compute_beams(events, group=1):
+    """符杠分组（与 LilyPond 一致）：人声按拍（group=1），弦乐按半小节（group=2）。"""
     beams = {}
     groups, cur, cur_beat = [], [], None
     for e in events:
         beamable = e.kind == "note" and e.base >= 8
-        beat = int(e.onset)  # 四分音符为一拍
-        if beamable and (cur_beat == beat) and cur and e.onset < beat + 1:
+        beat = int(e.onset // group) * group
+        if beamable and (cur_beat == beat) and cur and e.onset < beat + group:
             cur.append(e)
         else:
             if len(cur) >= 2:
@@ -67,15 +68,16 @@ def compute_beams(events):
     return beams
 
 
-def direction(inner, placement, sound=None, offset=None):
-    s = f'      <direction placement="{placement}">\n{inner}'
+def direction(inner, placement, sound=None, offset=None, system=None):
+    sys_attr = f' system="{system}"' if system else ""
+    s = f'      <direction placement="{placement}"{sys_attr}>\n{inner}'
     if sound:
         s += f"        {sound}\n"
     s += "      </direction>\n"
     return s
 
 
-def words(text, placement, italic=True, bold=False, size=None, family=LATIN):
+def words(text, placement, italic=True, bold=False, size=None, family=LATIN, system=None):
     attrs = f' font-family="{family}"'
     if italic:
         attrs += ' font-style="italic"'
@@ -83,15 +85,17 @@ def words(text, placement, italic=True, bold=False, size=None, family=LATIN):
         attrs += ' font-weight="bold"'
     if size:
         attrs += f' font-size="{size}"'
-    return direction(f"        <direction-type><words{attrs}>{x(text)}</words></direction-type>\n", placement)
+    return direction(f"        <direction-type><words{attrs}>{x(text)}</words></direction-type>\n", placement,
+                     system=system)
 
 
 def note_xml(e, part, beams, acc_state, first_in_chord=True):
     out = []
     dur = int(e.dur * DIV)
     if e.kind == "mrest":
+        ferm = '        <notations>\n          <fermata type="upright"/>\n        </notations>\n' if e.fermata else ""
         return [f'      <note>\n        <rest measure="yes"/>\n        <duration>{DIV * 4}</duration>\n'
-                f'        <voice>1</voice>\n      </note>\n']
+                f'        <voice>1</voice>\n{ferm}      </note>\n']
     if e.kind == "rest":
         s = (f"      <note>\n        <rest/>\n        <duration>{dur}</duration>\n        <voice>1</voice>\n"
              f"        <type>{TYPE_NAME[e.base]}</type>\n" + "        <dot/>\n" * e.dots + "      </note>\n")
@@ -131,7 +135,7 @@ def note_xml(e, part, beams, acc_state, first_in_chord=True):
             for _ in range(e.slur_stop):
                 nots.append('<slur type="stop" number="1"/>')
             for _ in range(e.slur_start):
-                nots.append(f'<slur type="start" number="1" placement="{"above" if part["key"] == "voice" else "above"}"/>')
+                nots.append('<slur type="start" number="1"/>')
             if e.fermata:
                 nots.append('<fermata type="upright"/>')
             arts = []
@@ -142,7 +146,7 @@ def note_xml(e, part, beams, acc_state, first_in_chord=True):
         if nots:
             s += "        <notations>\n" + "".join(f"          {n}\n" for n in nots) + "        </notations>\n"
         if pi == 0 and e.lyric:
-            s += (f'        <lyric number="1" default-y="-80">\n          <syllabic>single</syllabic>\n'
+            s += (f'        <lyric number="1" default-y="-94">\n          <syllabic>single</syllabic>\n'
                   f"          <text>{x(e.lyric)}</text>\n        </lyric>\n")
         s += "      </note>\n"
         out.append(s)
@@ -221,6 +225,10 @@ def build(parts, date="2026-09-28"):
       </system-margins>
       <system-distance>{t(30)}</system-distance>
       <top-system-distance>{t(14)}</top-system-distance>
+      <system-dividers>
+        <left-divider print-object="yes" halign="left" valign="bottom"/>
+        <right-divider print-object="no"/>
+      </system-dividers>
     </system-layout>
     <staff-layout>
       <staff-distance>{t(11)}</staff-distance>
@@ -230,8 +238,8 @@ def build(parts, date="2026-09-28"):
   </defaults>
 '''
     cr = ""
-    cr += credit(1, "FULL SCORE", cx, top, 8.5, family=LATIN, spacing="0.5")
-    cr += credit(1, SD.TITLE, cx, round(top - t(8), 1), 25, bold=True, ctype="title", spacing="0.12")
+    cr += credit(1, "F U L L    S C O R E", cx, top, 8.5, family=LATIN)
+    cr += credit(1, " ".join(SD.TITLE), cx, round(top - t(8), 1), 25, bold=True, ctype="title")
     cr += credit(1, SD.SUBTITLE_EN, cx, round(top - t(21), 1), 12.5, italic=True, family=LATIN, ctype="subtitle")
     cr += credit(1, SD.SUBTITLE_ZH, cx, round(top - t(27), 1), 10, ctype="subtitle")
     cr += credit(1, f"原唱　{SD.SINGER}", MARGIN_L, round(top - t(38), 1), 10.5, justify="left")
@@ -240,7 +248,7 @@ def build(parts, date="2026-09-28"):
     cr += credit(1, f"制谱　{SD.ENGRAVER}", right, round(top - t(50), 1), 11.5, justify="right", bold=True)
     for pg in range(1, n_pages + 1):
         cr += credit(pg, f"编配 · 制谱　{SD.ARRANGER}　　｜　　原唱 · 词曲　{SD.SINGER}",
-                     cx, round(t(6), 1), 8, valign="bottom", ctype="rights" if pg == 1 else None)
+                     cx, round(t(11), 1), 8, valign="bottom", ctype="rights" if pg == 1 else None)
         if pg > 1:
             cr += credit(pg, f"{SD.TITLE}   ·   Full Score", cx, top, 8.5, family=CJK)
 
@@ -274,7 +282,7 @@ def build(parts, date="2026-09-28"):
         dyn_place = "above" if is_top else "below"
         open_wedge = False
         for b in range(1, SD.N_BARS + 1):
-            evs = [e for e in p["events"] if e.bar == b]
+            evs = model.display_bar([e for e in p["events"] if e.bar == b])
             body += f'    <measure number="{b}">\n'
             # 分行 / 分页
             if b == 1 or b in SD.SYSTEM_STARTS:
@@ -315,14 +323,14 @@ def build(parts, date="2026-09-28"):
                     f"{x(SD.TEMPO_TEXT)}</words></direction-type>\n"
                     f'        <direction-type><metronome parentheses="yes"><beat-unit>quarter</beat-unit>'
                     f"<per-minute>{SD.BPM}</per-minute></metronome></direction-type>\n",
-                    "above", sound=f'<sound tempo="{SD.BPM}"/>')
+                    "above", sound=f'<sound tempo="{SD.BPM}"/>', system="only-top")
             if is_top and b in SD.REHEARSAL:
                 body += direction(
                     f'        <direction-type><rehearsal enclosure="square" font-weight="bold" font-size="14">'
-                    f"{SD.REHEARSAL[b]}</rehearsal></direction-type>\n", "above")
+                    f"{SD.REHEARSAL[b]}</rehearsal></direction-type>\n", "above", system="only-top")
             if is_top and b in SD.TEXT_MARKS:
-                body += words(SD.TEXT_MARKS[b], "above", size=11)
-            beams = compute_beams(evs)
+                body += words(SD.TEXT_MARKS[b], "above", size=11, system="only-top")
+            beams = compute_beams(evs, 1 if is_top else 2)
             acc_state = {}
             for e in evs:
                 if (e.hairpin_end or e.dyn or e.hairpin) and open_wedge:
@@ -342,6 +350,12 @@ def build(parts, date="2026-09-28"):
                     body += words(txt, "above" if pl_ == "^" else "below")
                 for s in note_xml(e, p, beams, acc_state):
                     body += s
+            # 下一小节第一拍有新力度/发夹/\! 时，发夹收在本小节线（= LilyPond Hairpin.to-barline）
+            nxt = next((e for e in p["events"] if e.bar == b + 1), None)
+            if open_wedge and nxt is not None and (nxt.dyn or nxt.hairpin or nxt.hairpin_end):
+                body += direction('        <direction-type><wedge type="stop" number="1"/></direction-type>\n',
+                                  dyn_place)
+                open_wedge = False
             if b in SD.DOUBLE_BAR_AFTER:
                 body += '      <barline location="right">\n        <bar-style>light-light</bar-style>\n      </barline>\n'
             if b == SD.N_BARS:

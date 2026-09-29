@@ -185,6 +185,22 @@ def parse_part(bars, part_name):
     return events
 
 
+def display_bar(evs):
+    """谱面显示用：整小节只有无标记的休止（如仅带 MIDI 气口的第 9 小节）→ 整小节休止。"""
+    if len(evs) > 1 and all(e.kind == "rest" and not (e.dyn or e.hairpin or e.hairpin_end or e.texts
+                                                       or e.fermata) for e in evs):
+        m = Event("mrest", [], BAR_LEN, 1, 0, bar=evs[0].bar, onset=F(0), start=evs[0].start)
+        return [m]
+    return evs
+
+
+def bars_of(events):
+    out = {}
+    for e in events:
+        out.setdefault(e.bar, []).append(e)
+    return [out[b] for b in sorted(out)]
+
+
 def assign_lyrics(events, syllables):
     """LilyPond \\lyricsto 的规则：圆滑线内后续音、连音线后续音不配新字。"""
     in_slur = False
